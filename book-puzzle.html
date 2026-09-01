@@ -122,7 +122,7 @@
   input[type=file]{ display:none; }
 
   /* ---------- 퍼즐 화면 ---------- */
-  #puzzleScreen{ display:none; width:100%; max-width:760px; }
+  #puzzleScreen{ display:none; width:100%; max-width:1180px; }
   .puzzle-topbar{
     display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
     margin-bottom:14px;
@@ -433,12 +433,11 @@ function tracePiecePath(ctx, tw, th, top, right, bottom, left){
   ctx.closePath();
 }
 
-function buildPuzzle(coverSource, rows, cols, containerWidth){
+function buildPuzzle(coverSource, rows, cols, maxDim){
   // 1) 보드 크기 계산 (책표지 = 세로형 비율 유지)
   const naturalW = coverSource.width || coverSource.naturalWidth;
   const naturalH = coverSource.height || coverSource.naturalHeight;
   const aspect = naturalW / naturalH;
-  const maxDim = Math.min(560, containerWidth - 32);
   let boardW, boardH;
   if(aspect >= 1){ boardW = maxDim; boardH = maxDim / aspect; }
   else { boardH = maxDim; boardW = maxDim * aspect; }
@@ -546,12 +545,23 @@ function startPuzzle(cover, diff){
 function layoutAndScatter(freshShuffle){
   playArea.innerHTML = '';
   const containerWidth = playArea.parentElement.clientWidth || 700;
-  currentPuzzle = buildPuzzle(currentCover.source, currentDiff, currentDiff, containerWidth);
 
-  const { boardW, boardH, pieces, tw, th, margin, boardCanvas } = currentPuzzle;
+  // 화면이 넉넉하면(태블릿 가로 등) 퍼즐판을 왼쪽, 조각 트레이를 오른쪽에 나란히 배치
+  const SIDE_BY_SIDE_MIN_WIDTH = 640;
+  const sideBySide = containerWidth >= SIDE_BY_SIDE_MIN_WIDTH;
 
   const boardOffsetX = 20, boardOffsetY = 20;
-  const trayOffsetY = boardOffsetY + boardH + 24;
+  let maxDim;
+  if(sideBySide){
+    // 오른쪽 트레이 공간을 넉넉히 남겨두고 보드 크기를 정함
+    maxDim = Math.min(420, containerWidth - 300 - boardOffsetX*2);
+    maxDim = Math.max(maxDim, 220);
+  } else {
+    maxDim = Math.min(560, containerWidth - 32);
+  }
+
+  currentPuzzle = buildPuzzle(currentCover.source, currentDiff, currentDiff, maxDim);
+  const { boardW, boardH, pieces, tw, th, margin, boardCanvas } = currentPuzzle;
 
   const outline = document.createElement('div');
   outline.className = 'board-outline';
@@ -573,18 +583,34 @@ function layoutAndScatter(freshShuffle){
 
   // 트레이 배치 계산
   const boxW = tw + margin*2 + 8, boxH = th + margin*2 + 8;
-  const trayCols = Math.max(1, Math.floor((containerWidth-40) / boxW));
+  let trayOffsetX, trayOffsetY, trayAreaWidth;
+  if(sideBySide){
+    trayOffsetX = boardOffsetX + boardW + 30;
+    trayOffsetY = boardOffsetY;
+    trayAreaWidth = Math.max(boxW, containerWidth - trayOffsetX - 20);
+  } else {
+    trayOffsetX = 20;
+    trayOffsetY = boardOffsetY + boardH + 24;
+    trayAreaWidth = containerWidth - 40;
+  }
+  const trayCols = Math.max(1, Math.floor(trayAreaWidth / boxW));
+
   const order = pieces.map((_,i)=>i);
   for(let i=order.length-1;i>0;i--){
     const j = Math.floor(Math.random()*(i+1));
     [order[i],order[j]] = [order[j],order[i]];
   }
 
-  let trayRowsUsed = Math.ceil(pieces.length / trayCols);
+  const trayRowsUsed = Math.ceil(pieces.length / trayCols);
   const trayHeight = trayRowsUsed * boxH + 20;
 
-  playArea.style.height = (trayOffsetY + trayHeight) + 'px';
-  playArea.style.width = '100%';
+  if(sideBySide){
+    playArea.style.width = (trayOffsetX + trayCols*boxW + 20) + 'px';
+    playArea.style.height = (Math.max(boardH, trayHeight) + boardOffsetY + 20) + 'px';
+  } else {
+    playArea.style.width = '100%';
+    playArea.style.height = (trayOffsetY + trayHeight) + 'px';
+  }
 
   placedCount = 0;
   progressText.textContent = `0/${pieces.length}`;
@@ -594,7 +620,7 @@ function layoutAndScatter(freshShuffle){
     const col = slot % trayCols, row = Math.floor(slot / trayCols);
     const jitterX = (Math.random()-0.5)*6;
     const jitterY = (Math.random()-0.5)*6;
-    const startX = 20 + col*boxW + jitterX;
+    const startX = trayOffsetX + col*boxW + jitterX;
     const startY = trayOffsetY + row*boxH + jitterY;
 
     piece.rotation = [0,90,180,270][Math.floor(Math.random()*4)];
