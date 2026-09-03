@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>책표지 키링 - 업로드 갤러리</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg: #FAF6F0;
+    --surface: #FFFFFF;
+    --ink: #33302C;
+    --ink-soft: #8A8377;
+    --line: #E6DFD2;
+    --accent: #3F6355;
+    --accent-soft: #E8EFE9;
+    --accent-deep: #2C4A3F;
+    --danger: #B4553F;
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+    padding: 32px 20px 60px;
+  }
+  .wrap{ max-width: 1040px; margin: 0 auto; }
+  header{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+  }
+  header h1{ font-size: 24px; margin: 0 0 4px; font-weight: 700; }
+  header p{ margin: 0; color: var(--ink-soft); font-size: 13.5px; }
+  button.refresh{
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 700;
+    padding: 9px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  button.refresh:hover{ background: var(--accent-soft); }
+  .state{
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 14px;
+    padding: 60px 0;
+  }
+  .grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 16px;
+  }
+  .card{
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .card img{
+    width: 100%;
+    aspect-ratio: 210 / 297;
+    object-fit: cover;
+    display: block;
+    background: var(--bg);
+  }
+  .card-body{
+    padding: 10px 12px 12px;
+  }
+  .card-name{
+    font-size: 13.5px;
+    font-weight: 700;
+    margin: 0 0 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-time{
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin: 0 0 10px;
+  }
+  .card-actions{
+    display: flex;
+    gap: 6px;
+  }
+  .card-actions a, .card-actions button{
+    flex: 1;
+    text-align: center;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    padding: 7px 6px;
+    border-radius: 7px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .card-actions a{
+    background: var(--accent);
+    color: #fff;
+  }
+  .card-actions button{
+    background: var(--accent-soft);
+    color: var(--danger);
+  }
+  .card-actions a:hover, .card-actions button:hover{ opacity: .85; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>책표지 키링 - 업로드 갤러리</h1>
+      <p>학생들이 보낸 인쇄용 시트가 여기에 모여요.</p>
+    </div>
+    <button class="refresh" id="refreshBtn">새로고침</button>
+  </header>
+  <div id="state" class="state">불러오는 중이에요...</div>
+  <div id="grid" class="grid"></div>
+</div>
+
+<script>
+(function(){
+  const SUPABASE_URL = 'https://qtytrchsjvwknioidqnn.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_3cLetGMW5XTirMIzmUyXZA_lFeX_iVC';
+  const BUCKET = 'keyring-sheets';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const stateEl = document.getElementById('state');
+  const gridEl = document.getElementById('grid');
+  const refreshBtn = document.getElementById('refreshBtn');
+
+  function parseFileName(name){
+    const match = name.match(/^(\d+)_(.+)\.png$/);
+    if (!match) return { label: name, time: null };
+    const ts = Number(match[1]);
+    const student = decodeURIComponent(match[2]);
+    const date = new Date(ts);
+    const time = date.toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return { label: student, time };
+  }
+
+  async function loadFiles(){
+    stateEl.style.display = 'block';
+    stateEl.textContent = '불러오는 중이에요...';
+    gridEl.innerHTML = '';
+
+    const { data, error } = await sb.storage.from(BUCKET).list('', {
+      limit: 200,
+      sortBy: { column: 'created_at', order: 'desc' }
+    });
+
+    if (error){
+      stateEl.textContent = '목록을 불러오지 못했어요. 새로고침을 눌러 다시 시도해 주세요.';
+      return;
+    }
+    if (!data || data.length === 0){
+      stateEl.textContent = '아직 올라온 시트가 없어요.';
+      return;
+    }
+
+    stateEl.style.display = 'none';
+    data.forEach(file => {
+      const { data: urlData } = sb.storage.from(BUCKET).getPublicUrl(file.name);
+      const { label, time } = parseFileName(file.name);
+
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const img = document.createElement('img');
+      img.src = urlData.publicUrl;
+      img.loading = 'lazy';
+      card.appendChild(img);
+
+      const body = document.createElement('div');
+      body.className = 'card-body';
+
+      const nameEl = document.createElement('p');
+      nameEl.className = 'card-name';
+      nameEl.textContent = label;
+      body.appendChild(nameEl);
+
+      const timeEl = document.createElement('p');
+      timeEl.className = 'card-time';
+      timeEl.textContent = time || '';
+      body.appendChild(timeEl);
+
+      const actions = document.createElement('div');
+      actions.className = 'card-actions';
+
+      const dlLink = document.createElement('a');
+      dlLink.href = urlData.publicUrl;
+      dlLink.download = file.name;
+      dlLink.textContent = '다운로드';
+      actions.appendChild(dlLink);
+
+      const delBtn = document.createElement('button');
+      delBtn.textContent = '삭제';
+      delBtn.addEventListener('click', async () => {
+        if (!confirm(`"${label}" 시트를 삭제할까요?`)) return;
+        const { error: delErr } = await sb.storage.from(BUCKET).remove([file.name]);
+        if (delErr){
+          alert('삭제하지 못했어요.');
+          return;
+        }
+        loadFiles();
+      });
+      actions.appendChild(delBtn);
+
+      body.appendChild(actions);
+      card.appendChild(body);
+      gridEl.appendChild(card);
+    });
+  }
+
+  refreshBtn.addEventListener('click', loadFiles);
+  loadFiles();
+})();
+</script>
+</body>
+</html>
