@@ -483,6 +483,11 @@
     sendStatus.className = 'status' + (kind ? ' ' + kind : '');
   }
 
+  function toSafeName(str){
+    const b64 = btoa(unescape(encodeURIComponent(str)));
+    return b64.replace(/\+/g, '-').replace(/\//g, '_');
+  }
+
   sendBtn.addEventListener('click', async () => {
     const name = studentName.value.trim();
     if (!name){
@@ -494,8 +499,8 @@
     setStatus('보내는 중이에요...', 'sending');
     try {
       const blob = await fullSheetBlob();
-      const safeName = name.replace(/[^\p{L}\p{N}]/gu, '');
-      const fileName = `${Date.now()}_${safeName || '이름없음'}.png`;
+      const safeName = toSafeName(name);
+      const fileName = `${Date.now()}_${safeName}.png`;
       const { error } = await sb.storage.from(BUCKET).upload(fileName, blob, {
         contentType: 'image/png',
         upsert: false
