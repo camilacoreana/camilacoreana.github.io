@@ -248,8 +248,13 @@
   .qd-thought-card p{font-size:13.5px; color:var(--ink); margin-bottom:4px; line-height:1.5;}
   .qd-thought-card span{font-size:11.5px; color:#9a8f80;}
   .qd-thought-footer{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+  .qd-thought-owner-actions{display:flex; gap:8px;}
   .qd-thought-edit-btn{
     border:none; background:transparent; color:var(--peach-deep); font-size:11.5px; font-weight:700;
+    cursor:pointer; padding:2px 4px;
+  }
+  .qd-thought-delete-btn{
+    border:none; background:transparent; color:#9a8f80; font-size:11.5px; font-weight:700;
     cursor:pointer; padding:2px 4px;
   }
   .qd-thought-edit-textarea{
@@ -1313,7 +1318,7 @@
         '<div class="friend-rec-list">'+booksHtml+'</div>' +
         '<p class="qd-section-title" style="margin-top:22px;">✍️ 내 생각 쓰기</p>' +
         '<div class="qd-form">' +
-          '<input type="text" id="qdNickname" placeholder="이름 또는 별명 (선택)">' +
+          '<input type="text" id="qdNickname" placeholder="이름 또는 별명">' +
           '<textarea id="qdThought" maxlength="500" placeholder="이 질문에 대한 내 생각을 자유롭게 써보세요."></textarea>' +
           '<div class="qd-form-actions">' +
             '<button type="button" class="btn btn-secondary qd-spell-btn" onclick="checkSpelling()" id="qdSpellBtn">🔍 맞춤법 검사</button>' +
@@ -1356,6 +1361,13 @@
       return found ? found.token : null;
     }
 
+    function removeMyToken(questionId, id){
+      const list = getMyThoughtTokens(questionId).filter(function(it){ return it.id !== id; });
+      try {
+        localStorage.setItem('qdMyThoughts_' + questionId, JSON.stringify(list));
+      } catch(e){}
+    }
+
     async function loadQuestionThoughts(questionId){
       const wrap = document.getElementById('qdThoughtsList');
       if (!wrap) return;
@@ -1376,21 +1388,48 @@
         }
         wrap.innerHTML = data.map(t => {
           const myToken = findMyToken(questionId, t.id);
-          const editBtn = myToken
-            ? '<button type="button" class="qd-thought-edit-btn" onclick="startEditThought(' + t.id + ', \'' + questionId + '\')">✏️ 수정</button>'
+          const ownerBtns = myToken
+            ? '<span class="qd-thought-owner-actions">' +
+                '<button type="button" class="qd-thought-edit-btn" onclick="startEditThought(' + t.id + ', \'' + questionId + '\')">✏️ 수정</button>' +
+                '<button type="button" class="qd-thought-delete-btn" onclick="deleteThought(' + t.id + ', \'' + questionId + '\')">🗑️ 삭제</button>' +
+              '</span>'
             : '';
           return `
           <div class="qd-thought-card" id="qdThoughtCard-${t.id}">
             <p class="qd-thought-content" id="qdThoughtContent-${t.id}">${escapeHtml(t.content)}</p>
             <div class="qd-thought-footer">
               <span>${t.nickname ? escapeHtml(t.nickname) : '이름 없는 친구'}</span>
-              ${editBtn}
+              ${ownerBtns}
             </div>
           </div>
         `;
         }).join('');
       } catch(e){
         wrap.innerHTML = '<p class="friend-rec-empty">생각을 불러오지 못했어요.</p>';
+      }
+    }
+
+    async function deleteThought(id, questionId){
+      const token = findMyToken(questionId, id);
+      if (!token || !supabaseClient){
+        alert('삭제 권한을 확인할 수 없어요.');
+        return;
+      }
+      if (!confirm('정말 삭제할까요? 되돌릴 수 없어요.')) return;
+      try {
+        const { data, error } = await supabaseClient.rpc('delete_question_thought', {
+          p_id: id,
+          p_token: token
+        });
+        if (error) throw error;
+        if (!data){
+          alert('삭제에 실패했어요. (이 기기에서 쓴 글이 맞는지 확인해 주세요)');
+          return;
+        }
+        removeMyToken(questionId, id);
+        loadQuestionThoughts(questionId);
+      } catch(e){
+        alert('삭제 중 문제가 생겼어요. 잠시 후 다시 시도해 주세요.');
       }
     }
 
@@ -1521,6 +1560,10 @@
       if (!q) return;
       const nickname = document.getElementById('qdNickname').value.trim();
       const content = document.getElementById('qdThought').value.trim();
+      if (!nickname){
+        alert('이름 또는 별명을 입력해주세요!');
+        return;
+      }
       if (!content){
         alert('내 생각을 입력해주세요!');
         return;
