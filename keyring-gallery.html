@@ -369,24 +369,47 @@
 
   async function buildPages(){
     const chosen = submissions.filter(s => selected.has(s.batchId));
-    const files = [];
-    chosen.forEach(s => s.files.forEach(f => files.push(f)));
-    const loaded = await Promise.all(files.map(f => loadImage(f.url)));
+    const subImages = await Promise.all(chosen.map(async sub => ({
+      name: sub.name,
+      imgs: await Promise.all(sub.files.map(f => loadImage(f.url)))
+    })));
+
+    const LABEL_H = Math.round(0.75 * PX_PER_CM);
+    const GROUP_GAP = Math.round(0.35 * PX_PER_CM);
 
     const pages = [];
-    for (let start = 0; start < loaded.length; start += PER_PAGE){
-      const pageImgs = loaded.slice(start, start + PER_PAGE);
-      const canvas = document.createElement('canvas');
+    let canvas = null, ctx = null, cursorY = 0;
+
+    function newPage(){
+      if (canvas) pages.push(canvas.toDataURL('image/png'));
+      canvas = document.createElement('canvas');
       canvas.width = A4_W;
       canvas.height = A4_H;
-      const ctx = canvas.getContext('2d');
+      ctx = canvas.getContext('2d');
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, A4_W, A4_H);
-      pageImgs.forEach((img, i) => {
+      cursorY = MARGIN;
+    }
+    newPage();
+
+    subImages.forEach(sub => {
+      const rows = Math.ceil(sub.imgs.length / COLS);
+      const blockH = LABEL_H + rows * PHOTO_H + (rows - 1) * GAP;
+      if (cursorY + blockH > A4_H - MARGIN){
+        newPage();
+      }
+
+      ctx.fillStyle = '#33302C';
+      ctx.font = `bold ${Math.round(LABEL_H * 0.55)}px sans-serif`;
+      ctx.textBaseline = 'middle';
+      ctx.fillText(sub.name, MARGIN, cursorY + LABEL_H / 2);
+      cursorY += LABEL_H;
+
+      sub.imgs.forEach((img, i) => {
         const col = i % COLS;
         const row = Math.floor(i / COLS);
         const x = MARGIN + col * (PHOTO_W + GAP);
-        const y = MARGIN + row * (PHOTO_H + GAP);
+        const y = cursorY + row * (PHOTO_H + GAP);
         drawCover(ctx, img, x, y, PHOTO_W, PHOTO_H);
         ctx.save();
         ctx.strokeStyle = '#B9B2A3';
@@ -395,8 +418,11 @@
         ctx.strokeRect(x, y, PHOTO_W, PHOTO_H);
         ctx.restore();
       });
-      pages.push(canvas.toDataURL('image/png'));
-    }
+
+      cursorY += rows * PHOTO_H + (rows - 1) * GAP + GROUP_GAP;
+    });
+
+    pages.push(canvas.toDataURL('image/png'));
     return pages;
   }
 
