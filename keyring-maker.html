@@ -27,14 +27,12 @@
     padding: 32px 20px 60px;
   }
   .wrap{
-    max-width: 980px;
+    max-width: 560px;
     margin: 0 auto;
   }
-  header{
-    margin-bottom: 28px;
-  }
+  header{ margin-bottom: 24px; }
   header h1{
-    font-size: 26px;
+    font-size: 24px;
     font-weight: 700;
     margin: 0 0 6px;
     letter-spacing: -0.01em;
@@ -42,16 +40,7 @@
   header p{
     margin: 0;
     color: var(--ink-soft);
-    font-size: 14.5px;
-  }
-  .layout{
-    display: grid;
-    grid-template-columns: 340px 1fr;
-    gap: 22px;
-    align-items: start;
-  }
-  @media (max-width: 760px){
-    .layout{ grid-template-columns: 1fr; }
+    font-size: 14px;
   }
   .panel{
     background: var(--surface);
@@ -59,7 +48,7 @@
     border-radius: 14px;
     padding: 20px;
   }
-  .panel + .panel{ margin-top: 18px; }
+  .panel + .panel{ margin-top: 16px; }
   .panel h2{
     font-size: 15px;
     font-weight: 700;
@@ -82,19 +71,9 @@
     border-color: var(--accent);
     background: var(--accent-soft);
   }
-  .dropzone .icon{
-    font-size: 26px;
-    margin-bottom: 6px;
-  }
-  .dropzone .label{
-    font-size: 13.5px;
-    font-weight: 600;
-  }
-  .dropzone .sub{
-    font-size: 12px;
-    color: var(--ink-soft);
-    margin-top: 3px;
-  }
+  .dropzone .icon{ font-size: 26px; margin-bottom: 6px; }
+  .dropzone .label{ font-size: 13.5px; font-weight: 600; }
+  .dropzone .sub{ font-size: 12px; color: var(--ink-soft); margin-top: 3px; }
   input[type=file]{ display:none; }
   .count-row{
     display:flex;
@@ -102,11 +81,7 @@
     align-items: baseline;
     margin: 14px 0 8px;
   }
-  .count-row .count{
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--accent-deep);
-  }
+  .count-row .count{ font-size: 13px; font-weight: 600; color: var(--accent-deep); }
   .thumbs{
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -120,18 +95,11 @@
     border: 1px solid var(--line);
     background: var(--bg);
   }
-  .thumb img{
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
+  .thumb img{ width: 100%; height: 100%; object-fit: cover; display: block; }
   .thumb button{
     position: absolute;
-    top: 3px;
-    right: 3px;
-    width: 18px;
-    height: 18px;
+    top: 3px; right: 3px;
+    width: 18px; height: 18px;
     border-radius: 50%;
     border: none;
     background: rgba(20,18,16,0.65);
@@ -165,25 +133,10 @@
     color: var(--ink);
     margin-bottom: 4px;
   }
-  .text-input:focus{
-    outline: none;
-    border-color: var(--accent);
-  }
-  .status{
-    font-size: 13px;
-    margin-top: 10px;
-    min-height: 18px;
-  }
-  .status.sending{ color: var(--ink-soft); }
-  .status.success{ color: var(--accent-deep); font-weight: 600; }
-  .status.error{ color: var(--danger); }
-  .actions{
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 18px;
-  }
-  button.primary, button.secondary{
+  .text-input:focus{ outline: none; border-color: var(--accent); }
+  .actions{ margin-top: 18px; }
+  button.primary{
+    width: 100%;
     font-family: inherit;
     font-size: 14px;
     font-weight: 700;
@@ -191,67 +144,16 @@
     border-radius: 9px;
     border: none;
     cursor: pointer;
-    transition: opacity .15s ease;
-  }
-  button.primary{
     background: var(--accent);
     color: #fff;
+    transition: opacity .15s ease;
   }
-  button.secondary{
-    background: var(--accent-soft);
-    color: var(--accent-deep);
-  }
-  button:disabled{
-    opacity: .45;
-    cursor: not-allowed;
-  }
-  button.primary:not(:disabled):hover, button.secondary:not(:disabled):hover{
-    opacity: .88;
-  }
-  .note{
-    font-size: 12.5px;
-    color: var(--ink-soft);
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid var(--line);
-  }
-  .preview-panel{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .sheet-frame{
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-  }
-  .sheet-frame .label{
-    font-size: 13px;
-    color: var(--ink-soft);
-    margin-bottom: 14px;
-  }
-  canvas#sheetCanvas{
-    width: 100%;
-    max-width: 460px;
-    height: auto;
-    box-shadow: 0 2px 14px rgba(50,40,25,0.10);
-    border-radius: 2px;
-  }
-  .specs{
-    display: flex;
-    gap: 18px;
-    margin-top: 18px;
-    font-size: 12.5px;
-    color: var(--ink-soft);
-  }
-  .specs b{
-    color: var(--ink);
-  }
+  button.primary:disabled{ opacity: .45; cursor: not-allowed; }
+  button.primary:not(:disabled):hover{ opacity: .88; }
+  .status{ font-size: 13px; margin-top: 10px; min-height: 18px; }
+  .status.sending{ color: var(--ink-soft); }
+  .status.success{ color: var(--accent-deep); font-weight: 600; }
+  .status.error{ color: var(--danger); }
 </style>
 </head>
 <body>
@@ -261,48 +163,32 @@
     <p>좋아하는 책 또는 읽고 싶은 책 표지를 올려주세요. 최대 8장까지 올릴 수 있어요.</p>
   </header>
 
-  <div class="layout">
-    <div>
-      <div class="panel">
-        <h2>책표지 올리기</h2>
-        <p class="hint">표지가 선명하게 보이는 이미지를 선택해 주세요.</p>
-        <div class="dropzone" id="dropzone">
-          <div class="icon">📷</div>
-          <div class="label">눌러서 책표지 선택하기</div>
-          <div class="sub">JPG, PNG · 최대 8장</div>
-        </div>
-        <input type="file" id="fileInput" accept="image/*" multiple>
-
-        <div class="count-row">
-          <span>업로드한 책표지</span>
-          <span class="count"><span id="countNum">0</span> / 8장</span>
-        </div>
-        <div class="thumbs" id="thumbs"></div>
-      </div>
-
-      <div class="panel">
-        <h2>선생님께 보내기</h2>
-        <p class="hint">이름을 쓰고 보내면 선생님이 확인 후 출력해 주세요.</p>
-        <label class="field-label" for="studentName">이름</label>
-        <input type="text" id="studentName" class="text-input" placeholder="예: 김도림">
-        <div class="actions">
-          <button class="primary" id="sendBtn" disabled>선생님께 보내기</button>
-        </div>
-        <p class="status" id="sendStatus"></p>
-      </div>
+  <div class="panel">
+    <h2>책표지 올리기</h2>
+    <p class="hint">표지가 선명하게 보이는 이미지를 선택해 주세요.</p>
+    <div class="dropzone" id="dropzone">
+      <div class="icon">📷</div>
+      <div class="label">눌러서 책표지 선택하기</div>
+      <div class="sub">JPG, PNG · 최대 8장</div>
     </div>
+    <input type="file" id="fileInput" accept="image/*" multiple>
 
-    <div class="preview-panel">
-      <div class="sheet-frame">
-        <div class="label">미리보기 · A4 (21 × 29.7cm)</div>
-        <canvas id="sheetCanvas"></canvas>
-        <div class="specs">
-          <span><b>책표지 규격</b> 3.3 × 4.3cm</span>
-          <span><b>배치</b> 최대 8장 (4×2)</span>
-          <span><b>해상도</b> 300dpi</span>
-        </div>
-      </div>
+    <div class="count-row">
+      <span>업로드한 책표지</span>
+      <span class="count"><span id="countNum">0</span> / 8장</span>
     </div>
+    <div class="thumbs" id="thumbs"></div>
+  </div>
+
+  <div class="panel">
+    <h2>선생님께 보내기</h2>
+    <p class="hint">이름을 쓰고 보내면 선생님이 확인 후 출력해 주세요.</p>
+    <label class="field-label" for="studentName">이름</label>
+    <input type="text" id="studentName" class="text-input" placeholder="예: 김도림">
+    <div class="actions">
+      <button class="primary" id="sendBtn" disabled>선생님께 보내기</button>
+    </div>
+    <p class="status" id="sendStatus"></p>
   </div>
 </div>
 
@@ -316,22 +202,8 @@
   const MAX_PHOTOS = 8;
   const DPI = 300;
   const PX_PER_CM = DPI / 2.54;
-
-  const A4_W_CM = 21, A4_H_CM = 29.7;
-  const PHOTO_W_CM = 3.3, PHOTO_H_CM = 4.3;
-  const GAP_CM = 0.35;
-  const COLS = 4, ROWS = 2;
-
-  const A4_W = Math.round(A4_W_CM * PX_PER_CM);
-  const A4_H = Math.round(A4_H_CM * PX_PER_CM);
-  const PHOTO_W = Math.round(PHOTO_W_CM * PX_PER_CM);
-  const PHOTO_H = Math.round(PHOTO_H_CM * PX_PER_CM);
-  const GAP = Math.round(GAP_CM * PX_PER_CM);
-
-  const BLOCK_W = COLS * PHOTO_W + (COLS - 1) * GAP;
-  const BLOCK_H = ROWS * PHOTO_H + (ROWS - 1) * GAP;
-  const START_X = Math.round((A4_W - BLOCK_W) / 2);
-  const START_Y = Math.round((A4_H - BLOCK_H) / 2);
+  const PHOTO_W = Math.round(3.3 * PX_PER_CM); // 낱장 사진 인쇄 크기(px)
+  const PHOTO_H = Math.round(4.3 * PX_PER_CM);
 
   let images = []; // {id, img}
 
@@ -342,8 +214,6 @@
   const sendBtn = document.getElementById('sendBtn');
   const studentName = document.getElementById('studentName');
   const sendStatus = document.getElementById('sendStatus');
-  const canvas = document.getElementById('sheetCanvas');
-  const ctx = canvas.getContext('2d');
 
   dropzone.addEventListener('click', () => fileInput.click());
   ['dragover'].forEach(evt => dropzone.addEventListener(evt, e => {
@@ -354,9 +224,7 @@
     e.preventDefault();
     dropzone.classList.remove('drag');
   }));
-  dropzone.addEventListener('drop', e => {
-    handleFiles(e.dataTransfer.files);
-  });
+  dropzone.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
   fileInput.addEventListener('change', e => {
     handleFiles(e.target.files);
     fileInput.value = '';
@@ -377,7 +245,6 @@
         img.onload = () => {
           images.push({ id: Date.now() + Math.random(), img });
           renderThumbs();
-          renderSheet();
         };
         img.src = e.target.result;
       };
@@ -391,7 +258,6 @@
   function removeImage(id){
     images = images.filter(item => item.id !== id);
     renderThumbs();
-    renderSheet();
   }
 
   function renderThumbs(){
@@ -414,8 +280,7 @@
       thumbs.appendChild(div);
     }
     countNum.textContent = images.length;
-    const has = images.length > 0;
-    sendBtn.disabled = !has;
+    sendBtn.disabled = images.length === 0;
   }
 
   function drawCover(context, img, dx, dy, dw, dh){
@@ -423,69 +288,32 @@
     const dstRatio = dw / dh;
     let sx, sy, sw, sh;
     if (srcRatio > dstRatio){
-      sh = img.height;
-      sw = sh * dstRatio;
-      sx = (img.width - sw) / 2;
-      sy = 0;
+      sh = img.height; sw = sh * dstRatio; sx = (img.width - sw) / 2; sy = 0;
     } else {
-      sw = img.width;
-      sh = sw / dstRatio;
-      sx = 0;
-      sy = (img.height - sh) / 2;
+      sw = img.width; sh = sw / dstRatio; sx = 0; sy = (img.height - sh) / 2;
     }
     context.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
   }
 
-  function drawSheet(targetCanvas, targetCtx, scale){
-    targetCanvas.width = A4_W * scale;
-    targetCanvas.height = A4_H * scale;
-    targetCtx.fillStyle = '#ffffff';
-    targetCtx.fillRect(0, 0, targetCanvas.width, targetCanvas.height);
-
-    for (let i = 0; i < COLS * ROWS; i++){
-      const col = i % COLS;
-      const row = Math.floor(i / COLS);
-      const x = (START_X + col * (PHOTO_W + GAP)) * scale;
-      const y = (START_Y + row * (PHOTO_H + GAP)) * scale;
-      const w = PHOTO_W * scale;
-      const h = PHOTO_H * scale;
-
-      if (images[i]){
-        drawCover(targetCtx, images[i].img, x, y, w, h);
-      }
-
-      targetCtx.save();
-      targetCtx.strokeStyle = '#B9B2A3';
-      targetCtx.lineWidth = Math.max(1, 1 * scale);
-      targetCtx.setLineDash([4 * scale, 3 * scale]);
-      targetCtx.strokeRect(x, y, w, h);
-      targetCtx.restore();
-    }
-  }
-
-  function renderSheet(){
-    const previewWidth = 920;
-    const scale = previewWidth / A4_W;
-    drawSheet(canvas, ctx, scale);
-  }
-
-  function fullSheetBlob(){
+  function cropToPhotoBlob(img){
     return new Promise(resolve => {
-      const fullCanvas = document.createElement('canvas');
-      const fullCtx = fullCanvas.getContext('2d');
-      drawSheet(fullCanvas, fullCtx, 1);
-      fullCanvas.toBlob(blob => resolve(blob), 'image/png');
+      const canvas = document.createElement('canvas');
+      canvas.width = PHOTO_W;
+      canvas.height = PHOTO_H;
+      const ctx = canvas.getContext('2d');
+      drawCover(ctx, img, 0, 0, PHOTO_W, PHOTO_H);
+      canvas.toBlob(blob => resolve(blob), 'image/png');
     });
-  }
-
-  function setStatus(text, kind){
-    sendStatus.textContent = text;
-    sendStatus.className = 'status' + (kind ? ' ' + kind : '');
   }
 
   function toSafeName(str){
     const b64 = btoa(unescape(encodeURIComponent(str)));
     return b64.replace(/\+/g, '-').replace(/\//g, '_');
+  }
+
+  function setStatus(text, kind){
+    sendStatus.textContent = text;
+    sendStatus.className = 'status' + (kind ? ' ' + kind : '');
   }
 
   sendBtn.addEventListener('click', async () => {
@@ -495,17 +323,23 @@
       studentName.focus();
       return;
     }
+    if (images.length === 0) return;
+
     sendBtn.disabled = true;
     setStatus('보내는 중이에요...', 'sending');
     try {
-      const blob = await fullSheetBlob();
+      const ts = Date.now();
       const safeName = toSafeName(name);
-      const fileName = `${Date.now()}_${safeName}.png`;
-      const { error } = await sb.storage.from(BUCKET).upload(fileName, blob, {
-        contentType: 'image/png',
-        upsert: false
-      });
-      if (error) throw error;
+      for (let i = 0; i < images.length; i++){
+        const blob = await cropToPhotoBlob(images[i].img);
+        const idx = String(i + 1).padStart(2, '0');
+        const fileName = `${ts}_${idx}_${safeName}.png`;
+        const { error } = await sb.storage.from(BUCKET).upload(fileName, blob, {
+          contentType: 'image/png',
+          upsert: false
+        });
+        if (error) throw error;
+      }
       setStatus('선생님께 잘 보내졌어요! 🎉', 'success');
     } catch (err){
       console.error(err);
@@ -516,7 +350,6 @@
   });
 
   renderThumbs();
-  renderSheet();
 })();
 </script>
 </body>

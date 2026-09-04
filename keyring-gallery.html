@@ -23,7 +23,7 @@
     background: var(--bg);
     color: var(--ink);
     font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
-    padding: 32px 20px 60px;
+    padding: 32px 20px 100px;
   }
   .wrap{ max-width: 1040px; margin: 0 auto; }
   header{
@@ -56,65 +56,95 @@
   }
   .grid{
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 16px;
   }
   .card{
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 12px;
-    overflow: hidden;
+    padding: 14px;
     display: flex;
     flex-direction: column;
+    gap: 10px;
   }
-  .card img{
-    width: 100%;
-    aspect-ratio: 210 / 297;
-    object-fit: cover;
-    display: block;
-    background: var(--bg);
+  .card.selected{ border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+  .card-top{
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
   }
-  .card-body{
-    padding: 10px 12px 12px;
+  .card-top input[type=checkbox]{
+    width: 20px; height: 20px;
+    margin-top: 2px;
+    accent-color: var(--accent);
+    cursor: pointer;
   }
+  .card-info{ flex: 1; min-width: 0; }
   .card-name{
-    font-size: 13.5px;
+    font-size: 14.5px;
     font-weight: 700;
     margin: 0 0 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .card-time{
-    font-size: 11.5px;
-    color: var(--ink-soft);
-    margin: 0 0 10px;
+  .card-meta{ font-size: 11.5px; color: var(--ink-soft); margin: 0; }
+  .thumb-strip{
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
   }
-  .card-actions{
-    display: flex;
-    gap: 6px;
+  .thumb-strip img{
+    width: 100%;
+    aspect-ratio: 3.3 / 4.3;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    background: var(--bg);
   }
-  .card-actions a, .card-actions button{
+  .card-actions{ display: flex; }
+  .card-actions button{
     flex: 1;
-    text-align: center;
     font-family: inherit;
-    font-size: 12.5px;
+    font-size: 12px;
     font-weight: 700;
     padding: 7px 6px;
     border-radius: 7px;
     border: none;
-    cursor: pointer;
-    text-decoration: none;
-  }
-  .card-actions a{
-    background: var(--accent);
-    color: #fff;
-  }
-  .card-actions button{
     background: var(--accent-soft);
     color: var(--danger);
+    cursor: pointer;
   }
-  .card-actions a:hover, .card-actions button:hover{ opacity: .85; }
+  .card-actions button:hover{ opacity: .85; }
+
+  .bar{
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    padding: 14px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 -2px 14px rgba(50,40,25,0.08);
+  }
+  .bar .summary{ font-size: 13.5px; color: var(--ink-soft); }
+  .bar .summary b{ color: var(--ink); }
+  .bar button{
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 11px 20px;
+    border-radius: 9px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+  }
+  .bar button:disabled{ opacity: .4; cursor: not-allowed; }
+  .bar button:not(:disabled):hover{ opacity: .88; }
 </style>
 </head>
 <body>
@@ -122,12 +152,17 @@
   <header>
     <div>
       <h1>책표지 키링 - 업로드 갤러리</h1>
-      <p>학생들이 보낸 인쇄용 시트가 여기에 모여요.</p>
+      <p>학생을 선택하면 A4 한 장에 사진을 빽빽하게 모아 인쇄할 수 있어요.</p>
     </div>
     <button class="refresh" id="refreshBtn">새로고침</button>
   </header>
   <div id="state" class="state">불러오는 중이에요...</div>
   <div id="grid" class="grid"></div>
+</div>
+
+<div class="bar">
+  <span class="summary" id="summary">선택된 학생 없음</span>
+  <button id="printBtn" disabled>선택한 학생 인쇄하기</button>
 </div>
 
 <script>
@@ -137,9 +172,27 @@
   const BUCKET = 'keyring-sheets';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  // 인쇄 레이아웃 상수 (여백 최소화해서 A4에 최대한 빽빽하게)
+  const DPI = 300;
+  const PX_PER_CM = DPI / 2.54;
+  const A4_W = Math.round(21 * PX_PER_CM);
+  const A4_H = Math.round(29.7 * PX_PER_CM);
+  const PHOTO_W = Math.round(3.3 * PX_PER_CM);
+  const PHOTO_H = Math.round(4.3 * PX_PER_CM);
+  const MARGIN = Math.round(0.5 * PX_PER_CM);
+  const GAP = Math.round(0.2 * PX_PER_CM);
+  const COLS = Math.floor((A4_W - 2 * MARGIN + GAP) / (PHOTO_W + GAP));
+  const ROWS = Math.floor((A4_H - 2 * MARGIN + GAP) / (PHOTO_H + GAP));
+  const PER_PAGE = COLS * ROWS;
+
   const stateEl = document.getElementById('state');
   const gridEl = document.getElementById('grid');
   const refreshBtn = document.getElementById('refreshBtn');
+  const summaryEl = document.getElementById('summary');
+  const printBtn = document.getElementById('printBtn');
+
+  let submissions = []; // { batchId, name, time, files:[{name,url,index}] }
+  let selected = new Set();
 
   function fromSafeName(str){
     try {
@@ -151,22 +204,29 @@
   }
 
   function parseFileName(name){
-    const match = name.match(/^(\d+)_(.+)\.png$/);
-    if (!match) return { label: name, time: null };
-    const ts = Number(match[1]);
-    const student = fromSafeName(match[2]);
-    const date = new Date(ts);
-    const time = date.toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-    return { label: student, time };
+    // 새 형식: {timestamp}_{index}_{safeName}.png (낱장 사진)
+    const raw = name.match(/^(\d+)_(\d+)_(.+)\.png$/);
+    if (raw){
+      return { kind: 'raw', ts: raw[1], index: Number(raw[2]), student: fromSafeName(raw[3]) };
+    }
+    // 예전 형식: {timestamp}_{safeName}.png (완성된 시트 통째로 업로드된 파일)
+    const legacy = name.match(/^(\d+)_(.+)\.png$/);
+    if (legacy){
+      return { kind: 'legacy', ts: legacy[1], index: 0, student: fromSafeName(legacy[2]) };
+    }
+    return { kind: 'unknown', ts: '0', index: 0, student: name };
   }
 
   async function loadFiles(){
     stateEl.style.display = 'block';
     stateEl.textContent = '불러오는 중이에요...';
     gridEl.innerHTML = '';
+    submissions = [];
+    selected.clear();
+    updateBar();
 
     const { data, error } = await sb.storage.from(BUCKET).list('', {
-      limit: 200,
+      limit: 1000,
       sortBy: { column: 'created_at', order: 'desc' }
     });
 
@@ -179,59 +239,200 @@
       return;
     }
 
-    stateEl.style.display = 'none';
+    const groups = new Map(); // batchId -> submission
     data.forEach(file => {
+      const parsed = parseFileName(file.name);
       const { data: urlData } = sb.storage.from(BUCKET).getPublicUrl(file.name);
-      const { label, time } = parseFileName(file.name);
+      const batchId = parsed.kind + '_' + parsed.ts;
+      if (!groups.has(batchId)){
+        groups.set(batchId, {
+          batchId,
+          kind: parsed.kind,
+          name: parsed.student,
+          ts: Number(parsed.ts),
+          files: []
+        });
+      }
+      groups.get(batchId).files.push({
+        fileName: file.name,
+        url: urlData.publicUrl,
+        index: parsed.index
+      });
+    });
 
+    submissions = Array.from(groups.values());
+    submissions.forEach(s => s.files.sort((a, b) => a.index - b.index));
+    submissions.sort((a, b) => b.ts - a.ts);
+
+    stateEl.style.display = 'none';
+    renderGrid();
+  }
+
+  function renderGrid(){
+    gridEl.innerHTML = '';
+    submissions.forEach(sub => {
       const card = document.createElement('div');
-      card.className = 'card';
+      card.className = 'card' + (selected.has(sub.batchId) ? ' selected' : '');
 
-      const img = document.createElement('img');
-      img.src = urlData.publicUrl;
-      img.loading = 'lazy';
-      card.appendChild(img);
+      const top = document.createElement('div');
+      top.className = 'card-top';
 
-      const body = document.createElement('div');
-      body.className = 'card-body';
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = selected.has(sub.batchId);
+      checkbox.disabled = sub.kind === 'legacy';
+      checkbox.addEventListener('change', () => {
+        if (checkbox.checked) selected.add(sub.batchId);
+        else selected.delete(sub.batchId);
+        card.classList.toggle('selected', checkbox.checked);
+        updateBar();
+      });
+      top.appendChild(checkbox);
 
+      const info = document.createElement('div');
+      info.className = 'card-info';
       const nameEl = document.createElement('p');
       nameEl.className = 'card-name';
-      nameEl.textContent = label;
-      body.appendChild(nameEl);
+      nameEl.textContent = sub.name;
+      const metaEl = document.createElement('p');
+      metaEl.className = 'card-meta';
+      const date = new Date(sub.ts);
+      const timeStr = date.toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      metaEl.textContent = (sub.kind === 'legacy' ? '이전 방식 · ' : '') + `${sub.files.length}장 · ${timeStr}`;
+      info.appendChild(nameEl);
+      info.appendChild(metaEl);
+      top.appendChild(info);
+      card.appendChild(top);
 
-      const timeEl = document.createElement('p');
-      timeEl.className = 'card-time';
-      timeEl.textContent = time || '';
-      body.appendChild(timeEl);
+      const strip = document.createElement('div');
+      strip.className = 'thumb-strip';
+      sub.files.forEach(f => {
+        const img = document.createElement('img');
+        img.src = f.url;
+        img.loading = 'lazy';
+        strip.appendChild(img);
+      });
+      card.appendChild(strip);
 
       const actions = document.createElement('div');
       actions.className = 'card-actions';
-
-      const dlLink = document.createElement('a');
-      dlLink.href = urlData.publicUrl;
-      dlLink.download = `${label}_책표지키링.png`;
-      dlLink.textContent = '다운로드';
-      actions.appendChild(dlLink);
-
       const delBtn = document.createElement('button');
       delBtn.textContent = '삭제';
       delBtn.addEventListener('click', async () => {
-        if (!confirm(`"${label}" 시트를 삭제할까요?`)) return;
-        const { error: delErr } = await sb.storage.from(BUCKET).remove([file.name]);
-        if (delErr){
-          alert('삭제하지 못했어요.');
-          return;
-        }
+        if (!confirm(`"${sub.name}"의 업로드를 삭제할까요?`)) return;
+        const paths = sub.files.map(f => f.fileName);
+        const { error } = await sb.storage.from(BUCKET).remove(paths);
+        if (error){ alert('삭제하지 못했어요.'); return; }
         loadFiles();
       });
       actions.appendChild(delBtn);
+      card.appendChild(actions);
 
-      body.appendChild(actions);
-      card.appendChild(body);
       gridEl.appendChild(card);
     });
   }
+
+  function updateBar(){
+    const count = selected.size;
+    const totalPhotos = submissions
+      .filter(s => selected.has(s.batchId))
+      .reduce((sum, s) => sum + s.files.length, 0);
+    if (count === 0){
+      summaryEl.textContent = '선택된 학생 없음';
+    } else {
+      summaryEl.innerHTML = `<b>${count}명</b> 선택됨 · 총 <b>${totalPhotos}장</b>`;
+    }
+    printBtn.disabled = count === 0;
+  }
+
+  function loadImage(url){
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+
+  function drawCover(context, img, dx, dy, dw, dh){
+    const srcRatio = img.width / img.height;
+    const dstRatio = dw / dh;
+    let sx, sy, sw, sh;
+    if (srcRatio > dstRatio){
+      sh = img.height; sw = sh * dstRatio; sx = (img.width - sw) / 2; sy = 0;
+    } else {
+      sw = img.width; sh = sw / dstRatio; sx = 0; sy = (img.height - sh) / 2;
+    }
+    context.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+  }
+
+  async function buildPages(){
+    const chosen = submissions.filter(s => selected.has(s.batchId));
+    const files = [];
+    chosen.forEach(s => s.files.forEach(f => files.push(f)));
+    const loaded = await Promise.all(files.map(f => loadImage(f.url)));
+
+    const pages = [];
+    for (let start = 0; start < loaded.length; start += PER_PAGE){
+      const pageImgs = loaded.slice(start, start + PER_PAGE);
+      const canvas = document.createElement('canvas');
+      canvas.width = A4_W;
+      canvas.height = A4_H;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, A4_W, A4_H);
+      pageImgs.forEach((img, i) => {
+        const col = i % COLS;
+        const row = Math.floor(i / COLS);
+        const x = MARGIN + col * (PHOTO_W + GAP);
+        const y = MARGIN + row * (PHOTO_H + GAP);
+        drawCover(ctx, img, x, y, PHOTO_W, PHOTO_H);
+        ctx.save();
+        ctx.strokeStyle = '#B9B2A3';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 3]);
+        ctx.strokeRect(x, y, PHOTO_W, PHOTO_H);
+        ctx.restore();
+      });
+      pages.push(canvas.toDataURL('image/png'));
+    }
+    return pages;
+  }
+
+  printBtn.addEventListener('click', async () => {
+    printBtn.disabled = true;
+    const originalText = printBtn.textContent;
+    printBtn.textContent = '준비 중...';
+    try {
+      const pages = await buildPages();
+      const win = window.open('', '_blank');
+      const imgsHtml = pages.map(src => `<img src="${src}">`).join('');
+      win.document.write(`
+        <html>
+          <head>
+            <title>책표지 키링 인쇄</title>
+            <style>
+              @page { size: A4; margin: 0; }
+              html, body { margin: 0; padding: 0; }
+              img { width: 210mm; height: 297mm; display: block; page-break-after: always; }
+              img:last-child { page-break-after: auto; }
+            </style>
+          </head>
+          <body>${imgsHtml}</body>
+        </html>
+      `);
+      win.document.close();
+      win.onload = () => { win.focus(); win.print(); };
+      setTimeout(() => { win.focus(); win.print(); }, 500);
+    } catch (err){
+      console.error(err);
+      alert('인쇄 준비 중 오류가 발생했어요: ' + (err && err.message ? err.message : '알 수 없는 오류'));
+    } finally {
+      printBtn.disabled = selected.size === 0;
+      printBtn.textContent = originalText;
+    }
+  });
 
   refreshBtn.addEventListener('click', loadFiles);
   loadFiles();
