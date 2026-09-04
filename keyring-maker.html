@@ -30,7 +30,13 @@
     max-width: 560px;
     margin: 0 auto;
   }
-  header{ margin-bottom: 24px; }
+  header{
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
   header h1{
     font-size: 24px;
     font-weight: 700;
@@ -42,6 +48,19 @@
     color: var(--ink-soft);
     font-size: 14px;
   }
+  button.refresh{
+    flex-shrink: 0;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  button.refresh:hover{ background: var(--accent-soft); }
   .panel{
     background: var(--surface);
     border: 1px solid var(--line);
@@ -159,8 +178,11 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>책표지 키링 만들기</h1>
-    <p>좋아하는 책 또는 읽고 싶은 책 표지를 올려주세요. 최대 8장까지 올릴 수 있어요.</p>
+    <div>
+      <h1>책표지 키링 만들기</h1>
+      <p>좋아하는 책 또는 읽고 싶은 책 표지를 올려주세요. 최대 8장까지 올릴 수 있어요.</p>
+    </div>
+    <button class="refresh" id="refreshBtn">새로고침</button>
   </header>
 
   <div class="panel">
@@ -214,6 +236,11 @@
   const sendBtn = document.getElementById('sendBtn');
   const studentName = document.getElementById('studentName');
   const sendStatus = document.getElementById('sendStatus');
+  const refreshBtn = document.getElementById('refreshBtn');
+
+  refreshBtn.addEventListener('click', () => {
+    window.location.href = window.location.pathname + '?v=' + Date.now();
+  });
 
   dropzone.addEventListener('click', () => fileInput.click());
   ['dragover'].forEach(evt => dropzone.addEventListener(evt, e => {
