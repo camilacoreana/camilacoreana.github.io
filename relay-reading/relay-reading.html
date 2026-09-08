@@ -182,6 +182,9 @@
     box-shadow:0 3px 0 var(--border);
     transition:transform 0.15s ease, box-shadow 0.15s ease;
   }
+  .cover-wrap.landscape{
+    aspect-ratio:4.2/3;
+  }
   .book:hover .cover-wrap, .book:focus-visible .cover-wrap{
     transform:translateY(-4px);
     box-shadow:0 8px 0 var(--peach);
@@ -383,9 +386,9 @@ const BOOKS = [
   {cover:"cover-30.jpg", title:"새봄이와 늘봄이", readers:[{name:"최은채", year:2025, url:"https://youtu.be/EayZ2GKE0ec"}]},
   {cover:"cover-31.jpg", title:"콩가면 선생님이 웃었다", readers:[{name:"학부모 민애경", year:2024, url:"https://youtu.be/L3ikPmqKlbY"}]},
   {cover:"cover-32.jpg", title:"딴생각 중", readers:[{name:"최하율", year:2025, url:"https://youtu.be/2m98L6g6Wyk"}]},
-  {cover:"cover-33.jpg", title:"아카시아 파마", readers:[{name:"한도람", year:2024, url:"https://youtu.be/kCoei2BoPJQ"}]},
+  {cover:"cover-33.jpg", title:"아카시아 파마", landscape:true, readers:[{name:"한도람", year:2024, url:"https://youtu.be/kCoei2BoPJQ"}]},
   {cover:"cover-34.jpg", title:"장수탕 선녀님", readers:[{name:"최예준", year:2025, url:"https://youtu.be/lia2xuJqhqs"}]},
-  {cover:"cover-35.jpg", title:"너에게 갈게(기억을 넘어)", readers:[{name:"학부모 정윤진", year:2026, url:"https://youtu.be/NNtJdOyrOHs"}]},
+  {cover:"cover-35.jpg", title:"기억을 넘어 너에게 갈게", readers:[{name:"학부모 정윤진", year:2026, url:"https://youtu.be/NNtJdOyrOHs"}]},
   {cover:"cover-36.jpg", title:"나 진짜 귀신을 봤어!", readers:[{name:"조수아", year:2025, url:"https://youtu.be/zl2hdGGFPtU"}]},
   {cover:"cover-37.jpg", title:"꼴찌 아파트", readers:[{name:"고아윤", year:2024, url:"https://youtu.be/SRVNBnSt2bc"}]},
   {cover:"cover-38.jpg", title:"두더지의 소원", readers:[{name:"김도경", year:2024, url:"https://youtu.be/b0JDB4g4k5c"}]},
@@ -408,7 +411,7 @@ const BOOKS = [
   {cover:"cover-51.jpg", title:"어린이를 위한 역사의 쓸모 3", readers:[{name:"교사 구아미", year:2024, url:"https://youtu.be/zn4vpcHM7Uw"}]},
   {cover:"cover-52.jpg", title:"오월의 달리기", readers:[{name:"조수아", year:2026, url:"https://youtu.be/QNa7twjrR3c"}]},
   {cover:"cover-53.jpg", title:"마지막 이벤트", readers:[{name:"김도경", year:2025, url:"https://youtu.be/urbQjcDL7Lo"}]},
-  {cover:"cover-54.jpg", title:"고릴라", readers:[{name:"최은채", year:2025, url:"https://youtu.be/hzZgVs8bJpo"}]},
+  {cover:"cover-54.jpg", title:"고릴라", landscape:true, readers:[{name:"최은채", year:2025, url:"https://youtu.be/hzZgVs8bJpo"}]},
   {cover:"cover-55.jpg", title:"사자왕 형제의 모험", readers:[{name:"교감 장동수", year:2024, url:"https://youtu.be/yuIYjsYVAEY"}]},
   {cover:"cover-56.jpg", title:"윤동주 시집", readers:[{name:"김시현", year:2024, url:"https://youtu.be/82sXtygwSVg"}]},
   {cover:"cover-57.jpg", title:"세상을 바꾼 위대한 책벌레들", readers:[{name:"최빛나", year:2026, url:"https://youtu.be/WEC5BXcsqbQ"}]}
@@ -434,7 +437,7 @@ function render(list){
     btn.className = 'book';
     btn.type = 'button';
     btn.innerHTML = `
-      <div class="cover-wrap">
+      <div class="cover-wrap${book.landscape ? ' landscape' : ''}">
         <img src="covers/${book.cover}" alt="${book.title} 표지" loading="lazy">
         ${book.readers.length > 1 ? `<span class="multi-badge">${book.readers.length}명</span>` : ''}
         <span class="play-badge">▶</span>
