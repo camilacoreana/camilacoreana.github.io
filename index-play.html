@@ -3,19 +3,52 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>도서관 책놀이</title>
+<title>복숭아숲도서관 책놀이</title>
 <link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: 'Gowun Dodum', sans-serif;
-    background: linear-gradient(135deg, #fff4e6 0%, #ffe8f0 50%, #e8f4ff 100%);
+    background:
+      radial-gradient(circle at 12% 20%, rgba(255,184,77,0.25) 0%, rgba(255,184,77,0) 45%),
+      radial-gradient(circle at 88% 15%, rgba(124,196,255,0.28) 0%, rgba(124,196,255,0) 45%),
+      radial-gradient(circle at 85% 85%, rgba(255,138,178,0.25) 0%, rgba(255,138,178,0) 45%),
+      radial-gradient(circle at 10% 88%, rgba(140,214,160,0.25) 0%, rgba(140,214,160,0) 45%),
+      linear-gradient(135deg, #fff4e6 0%, #ffe8f0 50%, #e8f4ff 100%);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 40px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .decorations {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .decorations span {
+    position: absolute;
+    font-size: 2.4rem;
+    opacity: 0.35;
+    animation: float 6s ease-in-out infinite;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.08));
+  }
+  .decorations span:nth-child(1) { top: 8%; left: 6%; font-size: 2.8rem; animation-delay: 0s; }
+  .decorations span:nth-child(2) { top: 15%; left: 85%; font-size: 2.2rem; animation-delay: 1s; }
+  .decorations span:nth-child(3) { top: 45%; left: 3%; font-size: 2rem; animation-delay: 2s; }
+  .decorations span:nth-child(4) { top: 70%; left: 90%; font-size: 2.6rem; animation-delay: 0.5s; }
+  .decorations span:nth-child(5) { top: 85%; left: 12%; font-size: 2.2rem; animation-delay: 1.5s; }
+  .decorations span:nth-child(6) { top: 8%; left: 45%; font-size: 1.8rem; animation-delay: 2.5s; }
+  .decorations span:nth-child(7) { top: 60%; left: 55%; font-size: 2rem; opacity: 0.25; animation-delay: 3s; }
+  .decorations span:nth-child(8) { top: 30%; left: 95%; font-size: 1.8rem; animation-delay: 1.8s; }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-18px) rotate(8deg); }
   }
   h1 {
     font-family: 'Jua', sans-serif;
@@ -24,12 +57,20 @@
     margin-bottom: 12px;
     text-shadow: 2px 2px 0px rgba(255,255,255,0.7);
     text-align: center;
+    position: relative;
+    z-index: 1;
   }
+  h1 .c1 { color: #ff8a5e; }
+  h1 .c2 { color: #4caf7d; }
+  h1 .c3 { color: #4a90d9; }
   .subtitle {
     font-size: 1.1rem;
+    font-weight: 700;
     color: #7a5c46;
     margin-bottom: 48px;
     text-align: center;
+    position: relative;
+    z-index: 1;
   }
   .cards {
     display: flex;
@@ -38,6 +79,8 @@
     justify-content: center;
     max-width: 900px;
     width: 100%;
+    position: relative;
+    z-index: 1;
   }
   .card {
     background: #ffffff;
@@ -50,6 +93,8 @@
     color: inherit;
     transition: transform 0.25s ease, box-shadow 0.25s ease;
     border: 3px solid transparent;
+    display: flex;
+    flex-direction: column;
   }
   .card:hover {
     transform: translateY(-8px) scale(1.02);
@@ -70,17 +115,20 @@
   }
   .card p {
     font-size: 0.95rem;
+    font-weight: 700;
     color: #8a7566;
     line-height: 1.5;
+    margin-bottom: 16px;
   }
   .badge {
     display: inline-block;
-    margin-top: 16px;
+    margin-top: auto;
     padding: 8px 20px;
     border-radius: 999px;
     font-family: 'Jua', sans-serif;
     font-size: 0.9rem;
     color: white;
+    align-self: center;
   }
   .card:nth-child(1) .badge { background: #ffab5e; }
   .card:nth-child(2) .badge { background: #6cb6f5; }
@@ -89,12 +137,25 @@
     font-size: 0.85rem;
     color: #9a8a7c;
     text-align: center;
+    position: relative;
+    z-index: 1;
   }
 </style>
 </head>
 <body>
 
-  <h1>📚 도서관 책놀이</h1>
+  <div class="decorations">
+    <span>🧩</span>
+    <span>🔍</span>
+    <span>📖</span>
+    <span>⭐</span>
+    <span>🎈</span>
+    <span>📚</span>
+    <span>✨</span>
+    <span>🧸</span>
+  </div>
+
+  <h1>📚 <span class="c1">복숭아</span><span class="c2">숲</span><span class="c3">도서관</span> 책놀이</h1>
   <p class="subtitle">책표지로 즐기는 재미있는 놀이를 골라보세요!</p>
 
   <div class="cards">
