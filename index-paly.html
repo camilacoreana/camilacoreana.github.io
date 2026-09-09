@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>도서관 책놀이</title>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Gowun Dodum', sans-serif;
+    background: linear-gradient(135deg, #fff4e6 0%, #ffe8f0 50%, #e8f4ff 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+  h1 {
+    font-family: 'Jua', sans-serif;
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    color: #2b2b2b;
+    margin-bottom: 12px;
+    text-shadow: 2px 2px 0px rgba(255,255,255,0.7);
+    text-align: center;
+  }
+  .subtitle {
+    font-size: 1.1rem;
+    color: #7a5c46;
+    margin-bottom: 48px;
+    text-align: center;
+  }
+  .cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    justify-content: center;
+    max-width: 900px;
+    width: 100%;
+  }
+  .card {
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    width: 320px;
+    padding: 32px 24px;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    border: 3px solid transparent;
+  }
+  .card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 16px 32px rgba(0,0,0,0.18);
+  }
+  .card:nth-child(1):hover { border-color: #ffb84d; }
+  .card:nth-child(2):hover { border-color: #7cc4ff; }
+  .icon {
+    font-size: 4rem;
+    margin-bottom: 16px;
+    display: block;
+  }
+  .card h2 {
+    font-family: 'Jua', sans-serif;
+    font-size: 1.5rem;
+    color: #5a3e2b;
+    margin-bottom: 10px;
+  }
+  .card p {
+    font-size: 0.95rem;
+    color: #8a7566;
+    line-height: 1.5;
+  }
+  .badge {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 8px 20px;
+    border-radius: 999px;
+    font-family: 'Jua', sans-serif;
+    font-size: 0.9rem;
+    color: white;
+  }
+  .card:nth-child(1) .badge { background: #ffab5e; }
+  .card:nth-child(2) .badge { background: #6cb6f5; }
+  footer {
+    margin-top: 56px;
+    font-size: 0.85rem;
+    color: #9a8a7c;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+  <h1>📚 도서관 책놀이</h1>
+  <p class="subtitle">책표지로 즐기는 재미있는 놀이를 골라보세요!</p>
+
+  <div class="cards">
+    <a class="card" href="https://camilacoreana.github.io/book-puzzle.html">
+      <span class="icon">🧩</span>
+      <h2>책표지 퍼즐 맞추기</h2>
+      <p>좋아하는 책표지를 골라<br>조각을 맞춰보세요.<br>조각을 돌려가며 완성해요!</p>
+      <span class="badge">시작하기</span>
+    </a>
+
+    <a class="card" href="https://camilacoreana.github.io/book-spot-diff.html">
+      <span class="icon">🔍</span>
+      <h2>책표지 다른 그림 찾기</h2>
+      <p>두 책표지 사이에 숨어있는<br>다른 부분 5곳을 찾아보세요!</p>
+      <span class="badge">시작하기</span>
+    </a>
+  </div>
+
+  <footer>복숭아숲도서관 🍑</footer>
+
+</body>
+</html>
