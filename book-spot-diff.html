@@ -30,12 +30,24 @@
     font-family:'Gowun Dodum', sans-serif;
     min-height:100vh;
     overflow-x:hidden;
+    position:relative;
   }
   .stage{
     max-width:1100px;
     margin:0 auto;
     padding:28px 18px 60px;
   }
+
+  /* ---------- 처음으로 버튼 ---------- */
+  .home-link{
+    position:absolute; top:16px; left:16px; z-index:10;
+    display:inline-flex; align-items:center; gap:5px;
+    background:#fff; color:var(--ink); font-family:'Jua',sans-serif;
+    font-size:13px; padding:8px 14px; border-radius:999px;
+    text-decoration:none; box-shadow:0 3px 8px rgba(0,0,0,.12);
+    transition:transform .15s ease;
+  }
+  .home-link:hover{ transform:translateY(-2px); }
 
   /* ---------- HERO ---------- */
   .hero{
@@ -340,6 +352,7 @@
 </style>
 </head>
 <body>
+<a class="home-link" href="https://camilacoreana.github.io/index-play.html">🏠 처음으로</a>
 <div class="stage">
 
   <div class="hero">
