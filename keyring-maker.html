@@ -102,7 +102,7 @@
   .thumb{
     position: relative;
     width: 160px;
-    aspect-ratio: 4.5 / 6;
+    aspect-ratio: 5 / 6.5;
     border-radius: 6px;
     overflow: hidden;
     border: 1px solid var(--line);
@@ -124,7 +124,7 @@
   }
   .empty-slot{
     width: 160px;
-    aspect-ratio: 4.5 / 6;
+    aspect-ratio: 5 / 6.5;
     border-radius: 6px;
     border: 1px dashed var(--line);
     background: var(--bg);
@@ -214,8 +214,8 @@
 
   const DPI = 300;
   const PX_PER_CM = DPI / 2.54;
-  const PHOTO_W = Math.round(4.5 * PX_PER_CM); // 낱장 사진 인쇄 크기(px)
-  const PHOTO_H = Math.round(6 * PX_PER_CM);
+  const PHOTO_W = Math.round(5 * PX_PER_CM); // 낱장 사진 인쇄 크기(px)
+  const PHOTO_H = Math.round(6.5 * PX_PER_CM);
 
   let currentImage = null; // { img }
 
