@@ -94,21 +94,15 @@
   .dropzone .label{ font-size: 13.5px; font-weight: 600; }
   .dropzone .sub{ font-size: 12px; color: var(--ink-soft); margin-top: 3px; }
   input[type=file]{ display:none; }
-  .count-row{
-    display:flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin: 14px 0 8px;
-  }
-  .count-row .count{ font-size: 13px; font-weight: 600; color: var(--accent-deep); }
   .thumbs{
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
+    margin-top: 14px;
+    display: flex;
+    justify-content: center;
   }
   .thumb{
     position: relative;
-    aspect-ratio: 3.3 / 4;
+    width: 160px;
+    aspect-ratio: 4.5 / 6;
     border-radius: 6px;
     overflow: hidden;
     border: 1px solid var(--line);
@@ -117,19 +111,20 @@
   .thumb img{ width: 100%; height: 100%; object-fit: cover; display: block; }
   .thumb button{
     position: absolute;
-    top: 3px; right: 3px;
-    width: 18px; height: 18px;
+    top: 5px; right: 5px;
+    width: 22px; height: 22px;
     border-radius: 50%;
     border: none;
     background: rgba(20,18,16,0.65);
     color: #fff;
-    font-size: 11px;
-    line-height: 18px;
+    font-size: 13px;
+    line-height: 22px;
     padding: 0;
     cursor: pointer;
   }
   .empty-slot{
-    aspect-ratio: 3.3 / 4;
+    width: 160px;
+    aspect-ratio: 4.5 / 6;
     border-radius: 6px;
     border: 1px dashed var(--line);
     background: var(--bg);
@@ -180,7 +175,7 @@
   <header>
     <div>
       <h1>책표지 키링 만들기</h1>
-      <p>좋아하는 책 또는 읽고 싶은 책 표지를 올려주세요. 최대 16장까지 올릴 수 있어요.</p>
+      <p>좋아하는 책 또는 읽고 싶은 책 표지를 1장 올려주세요.</p>
     </div>
     <button class="refresh" id="refreshBtn">새로고침</button>
   </header>
@@ -191,14 +186,10 @@
     <div class="dropzone" id="dropzone">
       <div class="icon">📷</div>
       <div class="label">눌러서 책표지 선택하기</div>
-      <div class="sub">JPG, PNG · 최대 16장</div>
+      <div class="sub">JPG, PNG · 1장</div>
     </div>
-    <input type="file" id="fileInput" accept="image/*" multiple>
+    <input type="file" id="fileInput" accept="image/*">
 
-    <div class="count-row">
-      <span>업로드한 책표지</span>
-      <span class="count"><span id="countNum">0</span> / 16장</span>
-    </div>
     <div class="thumbs" id="thumbs"></div>
   </div>
 
@@ -221,18 +212,16 @@
   const BUCKET = 'keyring-sheets';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const MAX_PHOTOS = 16;
   const DPI = 300;
   const PX_PER_CM = DPI / 2.54;
-  const PHOTO_W = Math.round(3.3 * PX_PER_CM); // 낱장 사진 인쇄 크기(px)
-  const PHOTO_H = Math.round(4 * PX_PER_CM);
+  const PHOTO_W = Math.round(4.5 * PX_PER_CM); // 낱장 사진 인쇄 크기(px)
+  const PHOTO_H = Math.round(6 * PX_PER_CM);
 
-  let images = []; // {id, img}
+  let currentImage = null; // { img }
 
   const dropzone = document.getElementById('dropzone');
   const fileInput = document.getElementById('fileInput');
   const thumbs = document.getElementById('thumbs');
-  const countNum = document.getElementById('countNum');
   const sendBtn = document.getElementById('sendBtn');
   const studentName = document.getElementById('studentName');
   const sendStatus = document.getElementById('sendStatus');
@@ -260,54 +249,43 @@
   function handleFiles(fileList){
     const files = Array.from(fileList).filter(f => f.type.startsWith('image/'));
     if (!files.length) return;
-    const room = MAX_PHOTOS - images.length;
-    if (room <= 0){
-      alert('책표지는 최대 16장까지 올릴 수 있어요.');
-      return;
-    }
-    files.slice(0, room).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = e => {
-        const img = new Image();
-        img.onload = () => {
-          images.push({ id: Date.now() + Math.random(), img });
-          renderThumbs();
-        };
-        img.src = e.target.result;
+    const file = files[0];
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        currentImage = { img };
+        renderThumbs();
       };
-      reader.readAsDataURL(file);
-    });
-    if (files.length > room){
-      alert('최대 16장까지만 담을 수 있어서 나머지는 담기지 않았어요.');
-    }
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
   }
 
-  function removeImage(id){
-    images = images.filter(item => item.id !== id);
+  function removeImage(){
+    currentImage = null;
     renderThumbs();
   }
 
   function renderThumbs(){
     thumbs.innerHTML = '';
-    images.forEach(item => {
+    if (currentImage){
       const div = document.createElement('div');
       div.className = 'thumb';
       const img = document.createElement('img');
-      img.src = item.img.src;
+      img.src = currentImage.img.src;
       const btn = document.createElement('button');
       btn.textContent = '✕';
-      btn.addEventListener('click', () => removeImage(item.id));
+      btn.addEventListener('click', removeImage);
       div.appendChild(img);
       div.appendChild(btn);
       thumbs.appendChild(div);
-    });
-    for (let i = images.length; i < MAX_PHOTOS; i++){
+    } else {
       const div = document.createElement('div');
       div.className = 'empty-slot';
       thumbs.appendChild(div);
     }
-    countNum.textContent = images.length;
-    sendBtn.disabled = images.length === 0;
+    sendBtn.disabled = !currentImage;
   }
 
   function drawCover(context, img, dx, dy, dw, dh){
@@ -350,29 +328,26 @@
       studentName.focus();
       return;
     }
-    if (images.length === 0) return;
+    if (!currentImage) return;
 
     sendBtn.disabled = true;
     setStatus('보내는 중이에요...', 'sending');
     try {
       const ts = Date.now();
       const safeName = toSafeName(name);
-      for (let i = 0; i < images.length; i++){
-        const blob = await cropToPhotoBlob(images[i].img);
-        const idx = String(i + 1).padStart(2, '0');
-        const fileName = `${ts}_${idx}_${safeName}.png`;
-        const { error } = await sb.storage.from(BUCKET).upload(fileName, blob, {
-          contentType: 'image/png',
-          upsert: false
-        });
-        if (error) throw error;
-      }
+      const blob = await cropToPhotoBlob(currentImage.img);
+      const fileName = `${ts}_01_${safeName}.png`;
+      const { error } = await sb.storage.from(BUCKET).upload(fileName, blob, {
+        contentType: 'image/png',
+        upsert: false
+      });
+      if (error) throw error;
       setStatus('선생님께 잘 보내졌어요! 🎉', 'success');
     } catch (err){
       console.error(err);
       setStatus('전송에 실패했어요: ' + (err && err.message ? err.message : '알 수 없는 오류') + ' (다시 눌러주세요)', 'error');
     } finally {
-      sendBtn.disabled = images.length === 0;
+      sendBtn.disabled = !currentImage;
     }
   });
 
