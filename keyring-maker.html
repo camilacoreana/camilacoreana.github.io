@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>책표지 마그네틱 만들기</title>
+<title>책과 함께 찰칵!</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
@@ -48,6 +48,7 @@
     color: var(--ink-soft);
     font-size: 14px;
   }
+  header p + p{ margin-top: 6px; }
   button.refresh{
     flex-shrink: 0;
     font-family: inherit;
@@ -102,7 +103,7 @@
   .thumb{
     position: relative;
     width: 160px;
-    aspect-ratio: 5 / 6.5;
+    aspect-ratio: 4.6 / 6.2;
     border-radius: 6px;
     overflow: hidden;
     border: 1px solid var(--line);
@@ -124,7 +125,7 @@
   }
   .empty-slot{
     width: 160px;
-    aspect-ratio: 5 / 6.5;
+    aspect-ratio: 4.6 / 6.2;
     border-radius: 6px;
     border: 1px dashed var(--line);
     background: var(--bg);
@@ -174,18 +175,18 @@
 <div class="wrap">
   <header>
     <div>
-      <h1>책표지 마그네틱 만들기</h1>
-      <p>내가 뽑은 '올해의 책' 표지 1장을 올려 주세요.</p>
+      <h1>책과 함께 찰칵!</h1>
+      <p>내가 뽑은 '올해의 책'은 어떤 책인가요? 책과 함께 사진을 찍어 보세요.</p>
+      <p>도서관에 책이 없다면, 온라인 서점에서 책표지를 다운받아 올려도 돼요.</p>
     </div>
     <button class="refresh" id="refreshBtn">새로고침</button>
   </header>
 
   <div class="panel">
-    <h2>책표지 올리기</h2>
-    <p class="hint">표지가 선명하게 보이는 이미지를 선택해 주세요.</p>
+    <h2>사진 올리기</h2>
     <div class="dropzone" id="dropzone">
       <div class="icon">📷</div>
-      <div class="label">눌러서 책표지 선택하기</div>
+      <div class="label">눌러서 사진 선택하기</div>
       <div class="sub">JPG, PNG · 1장</div>
     </div>
     <input type="file" id="fileInput" accept="image/*">
@@ -214,8 +215,8 @@
 
   const DPI = 300;
   const PX_PER_CM = DPI / 2.54;
-  const PHOTO_W = Math.round(5 * PX_PER_CM); // 낱장 사진 인쇄 크기(px)
-  const PHOTO_H = Math.round(6.5 * PX_PER_CM);
+  const PHOTO_W = Math.round(4.6 * PX_PER_CM); // 낱장 사진 인쇄 크기(px)
+  const PHOTO_H = Math.round(6.2 * PX_PER_CM);
 
   let currentImage = null; // { img }
 
