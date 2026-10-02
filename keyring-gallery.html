@@ -179,8 +179,8 @@
   const A4_H = Math.round(29.7 * PX_PER_CM);
   const PHOTO_W = Math.round(4.6 * PX_PER_CM);   // 실제 사진 영역
   const PHOTO_H = Math.round(6.2 * PX_PER_CM);
-  const FILM_W = Math.round(5.4 * PX_PER_CM);    // 인화지(필름) 전체 크기
-  const FILM_H = Math.round(8.6 * PX_PER_CM);
+  const FILM_W = Math.round(5.2 * PX_PER_CM);    // 인화지(필름) 전체 크기
+  const FILM_H = Math.round(8.3 * PX_PER_CM);
   const PHOTO_OFFSET_X = Math.round((FILM_W - PHOTO_W) / 2); // 좌우 여백
   const PHOTO_OFFSET_Y = PHOTO_OFFSET_X; // 상단 여백 = 좌우 여백, 나머지는 하단 여백(캡션 공간)
   const MARGIN = Math.round(0.3 * PX_PER_CM); // 3mm, 페이지 여백
@@ -419,7 +419,7 @@
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(fx, fy, FILM_W, FILM_H);
         ctx.save();
-        ctx.strokeStyle = '#B9B2A3';
+        ctx.strokeStyle = '#000000';
         ctx.lineWidth = 1;
         ctx.setLineDash([4, 3]);
         ctx.strokeRect(fx, fy, FILM_W, FILM_H);
