@@ -368,6 +368,13 @@
   .fr-title{ font-weight:900; color:var(--ink); font-size:14.5px; margin-bottom:4px; }
   .fr-reason{ color:var(--ink); font-weight:700; font-size:13.5px; margin-bottom:6px; line-height:1.5; }
   .fr-by{ color:#6b5f52; font-weight:700; font-size:12px; }
+  .other-type-chips{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-bottom:14px; }
+  .other-type-chips button{
+    border:none; border-radius:999px; padding:6px 12px; font-size:12.5px; font-weight:700; cursor:pointer;
+    background:rgba(255,255,255,0.14); color:var(--cream); font-family:'Noto Sans KR';
+  }
+  .other-type-chips button.on{ background:var(--peach-deep); color:var(--paper); }
+  .rbti-result .friend-rec-card p.fr-type{ font-size:11.5px; color:var(--peach-deep); font-weight:900; margin-bottom:4px; }
   .rbti-result .btn-secondary{ color:var(--cream); border-color:var(--cream); }
   .rbti-result .btn-secondary:hover{ background:rgba(255,255,255,0.12); }
   .rbti-result .friend-rec-card p{ color:#000; font-weight:700; max-width:none; margin:0 0 6px; text-align:left; }
@@ -636,19 +643,22 @@
               <button class="btn btn-primary" id="friendRecToggleBtn" onclick="toggleFriendRecForm()">📝 나도 책 추천하기</button>
             </div>
             <div class="friend-rec-form" id="friendRecForm" style="display:none;">
-              <input type="text" id="frBookTitle" placeholder="책 제목*" maxlength="60">
+              <input type="text" id="frBookTitle" placeholder="책 제목*" maxlength="60" spellcheck="true" lang="ko">
               <input type="text" id="frAuthor" placeholder="지은이 (선택)" maxlength="40">
-              <textarea id="frReason" placeholder="한 줄 추천 이유*" maxlength="150"></textarea>
-              <input type="text" id="frNickname" placeholder="닉네임 (선택)" maxlength="20">
+              <textarea id="frReason" placeholder="추천 이유*" maxlength="150" spellcheck="true" lang="ko"></textarea>
+              <input type="text" id="frNickname" placeholder="이름 (선택)" maxlength="20">
               <button class="btn btn-primary" id="frSubmitBtn" onclick="submitFriendRec()">추천 남기기</button>
               <p class="friend-rec-note">* 추천을 남기면 바로 사이트에 공개돼요.</p>
             </div>
           </div>
 
-          <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
-            <button class="btn btn-primary" onclick="rbtiRestart()">🏠 처음으로 돌아가기</button>
-            <button class="btn btn-secondary" onclick="rbtiRestart()">다시 검사하기</button>
+          <div class="rbti-friend-recs">
+            <h4>👀 다른 유형 친구들이 추천한 책</h4>
+            <div class="other-type-chips" id="otherTypeChips"></div>
+            <div class="friend-rec-list" id="otherRecList"></div>
           </div>
+
+          <button class="btn btn-secondary" onclick="rbtiRestart()">다시 검사하기</button>
         </div>
 
         <div class="rbti-detail" id="rbtiDetail" style="display:none;">
@@ -981,6 +991,17 @@
     return div.innerHTML;
   }
 
+  function renderRecCards(data, showType){
+    return data.map(r => `
+        <div class="friend-rec-card">
+          ${showType ? `<p class="fr-type">${escapeHtml(r.rbti_type)} · ${rbtiTypes[r.rbti_type] ? escapeHtml(rbtiTypes[r.rbti_type].name) : ''}</p>` : ''}
+          <p class="fr-title">${escapeHtml(r.book_title)}${r.author ? ' · ' + escapeHtml(r.author) : ''}</p>
+          <p class="fr-reason">"${escapeHtml(r.reason)}"</p>
+          <p class="fr-by">${r.nickname ? escapeHtml(r.nickname) + ' 추천' : '이름 없는 친구 추천'}</p>
+        </div>
+      `).join('');
+  }
+
   async function loadFriendRecs(type){
     const wrap = document.getElementById('friendRecList');
     if (!supabaseClient){
@@ -991,7 +1012,7 @@
     try {
       const { data, error } = await supabaseClient
         .from('book_recommendations')
-        .select('book_title, author, reason, nickname, created_at')
+        .select('rbti_type, book_title, author, reason, nickname, created_at')
         .eq('rbti_type', type)
         .eq('approved', true)
         .order('created_at', { ascending: false });
@@ -1000,13 +1021,50 @@
         wrap.innerHTML = '<p class="friend-rec-empty">아직 추천이 없어요. 첫 번째 추천을 남겨보세요!</p>';
         return;
       }
-      wrap.innerHTML = data.map(r => `
-        <div class="friend-rec-card">
-          <p class="fr-title">${escapeHtml(r.book_title)}${r.author ? ' · ' + escapeHtml(r.author) : ''}</p>
-          <p class="fr-reason">"${escapeHtml(r.reason)}"</p>
-          <p class="fr-by">${r.nickname ? escapeHtml(r.nickname) + ' 추천' : '이름 없는 친구 추천'}</p>
-        </div>
-      `).join('');
+      wrap.innerHTML = renderRecCards(data, false);
+    } catch(e){
+      wrap.innerHTML = '<p class="friend-rec-empty">추천을 불러오지 못했어요.</p>';
+    }
+  }
+
+  // 다른 유형 친구들이 추천한 책 (filter: 'all' 또는 유형 코드)
+  function setupOtherTypeChips(){
+    const chips = document.getElementById('otherTypeChips');
+    const codes = Object.keys(rbtiTypes).filter(c => c !== rbtiCurrentCode);
+    chips.innerHTML = '<button data-t="all" class="on">전체</button>' +
+      codes.map(c => `<button data-t="${c}">${c}</button>`).join('');
+    chips.querySelectorAll('button').forEach(btn => {
+      btn.onclick = () => {
+        chips.querySelectorAll('button').forEach(b => b.classList.remove('on'));
+        btn.classList.add('on');
+        loadOtherRecs(btn.dataset.t);
+      };
+    });
+    loadOtherRecs('all');
+  }
+
+  async function loadOtherRecs(filter){
+    const wrap = document.getElementById('otherRecList');
+    if (!supabaseClient){
+      wrap.innerHTML = '<p class="friend-rec-empty">추천 기능을 불러올 수 없어요.</p>';
+      return;
+    }
+    wrap.innerHTML = '<p class="friend-rec-loading">불러오는 중...</p>';
+    try {
+      let q = supabaseClient
+        .from('book_recommendations')
+        .select('rbti_type, book_title, author, reason, nickname, created_at')
+        .eq('approved', true)
+        .order('created_at', { ascending: false })
+        .limit(30);
+      q = (filter === 'all') ? q.neq('rbti_type', rbtiCurrentCode) : q.eq('rbti_type', filter);
+      const { data, error } = await q;
+      if (error) throw error;
+      if (!data || data.length === 0){
+        wrap.innerHTML = '<p class="friend-rec-empty">아직 추천이 없어요.</p>';
+        return;
+      }
+      wrap.innerHTML = renderRecCards(data, true);
     } catch(e){
       wrap.innerHTML = '<p class="friend-rec-empty">추천을 불러오지 못했어요.</p>';
     }
@@ -1121,6 +1179,7 @@
     ).join('');
     document.getElementById('friendRecForm').style.display = 'none';
     loadFriendRecs(code);
+    setupOtherTypeChips();
   }
 
   function rbtiOpenCategory(catName){
