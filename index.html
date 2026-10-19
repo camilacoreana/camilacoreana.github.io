@@ -368,6 +368,8 @@
   .fr-title{ font-weight:900; color:var(--ink); font-size:14.5px; margin-bottom:4px; }
   .fr-reason{ color:var(--ink); font-weight:700; font-size:13.5px; margin-bottom:6px; line-height:1.5; }
   .fr-by{ color:#6b5f52; font-weight:700; font-size:12px; }
+  .rbti-result .btn-secondary{ color:var(--cream); border-color:var(--cream); }
+  .rbti-result .btn-secondary:hover{ background:rgba(255,255,255,0.12); }
   .rbti-result .friend-rec-card p{ color:#000; font-weight:700; max-width:none; margin:0 0 6px; text-align:left; }
   .rbti-result .friend-rec-card p.fr-title{ font-weight:900; font-size:14.5px; }
   .rbti-result .friend-rec-card p.fr-reason{ font-size:13.5px; line-height:1.5; }
@@ -643,7 +645,10 @@
             </div>
           </div>
 
-          <button class="btn btn-secondary" onclick="rbtiRestart()">다시 검사하기</button>
+          <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="rbtiRestart()">🏠 처음으로 돌아가기</button>
+            <button class="btn btn-secondary" onclick="rbtiRestart()">다시 검사하기</button>
+          </div>
         </div>
 
         <div class="rbti-detail" id="rbtiDetail" style="display:none;">
@@ -1164,6 +1169,8 @@
     document.getElementById('rbtiResult').style.display = 'none';
     document.getElementById('rbtiDetail').style.display = 'none';
     document.getElementById('rbtiIntro').style.display = 'block';
+    var t = document.getElementById('reading-type-test');
+    if (t) t.scrollIntoView({behavior:'smooth', block:'start'});
   }
 </script>
 
