@@ -365,9 +365,9 @@
   .friend-rec-card{
     background:var(--paper); border-radius:14px; padding:12px 16px; text-align:left;
   }
-  .fr-title{ font-weight:700; color:var(--ink); font-size:14.5px; margin-bottom:4px; }
-  .fr-reason{ color:#6b5f52; font-size:13.5px; margin-bottom:6px; line-height:1.5; }
-  .fr-by{ color:#9a8f80; font-size:12px; }
+  .fr-title{ font-weight:900; color:var(--ink); font-size:14.5px; margin-bottom:4px; }
+  .fr-reason{ color:var(--ink); font-weight:700; font-size:13.5px; margin-bottom:6px; line-height:1.5; }
+  .fr-by{ color:#6b5f52; font-weight:700; font-size:12px; }
   .friend-rec-loading, .friend-rec-empty{ color:#cfe0cc; text-align:center; padding:16px 10px; font-size:13.5px; }
   .friend-rec-form{
     background:rgba(255,255,255,0.08); border-radius:16px; padding:18px; margin-top:14px;
@@ -555,7 +555,6 @@
         <div class="news-body">
           <span class="news-tag">안내</span>
           <h3>여름방학 도서관 운영 안내</h3>
-          <p class="preview">여름방학 기간 도서관 운영시간과 대출·반납 안내예요. 8월 3일부터 19일까지 오전 9시~오후 1시 운영해요.</p>
           <span class="news-more">자세히 보기 →</span>
         </div>
       </div>
@@ -563,9 +562,7 @@
         <div class="news-body">
           <span class="news-tag">행사</span>
           <h3>7월 '필사의 즐거움'</h3>
-          <p class="preview">소식지 &lt;문장수집&gt;에 소개되었던 문장을 따라 써보는 필사 활동이에요. 참여하면 교정연필과 지우개를 선물로 드려요!</p>
           <span class="news-more">자세히 보기 →</span>
-          <span class="news-date">7월 6일(월) ~ 7월 17일(금)</span>
         </div>
       </div>
     </div>
@@ -634,7 +631,7 @@
             </div>
             <div class="friend-rec-form" id="friendRecForm" style="display:none;">
               <input type="text" id="frBookTitle" placeholder="책 제목*" maxlength="60">
-              <input type="text" id="frAuthor" placeholder="저자 (선택)" maxlength="40">
+              <input type="text" id="frAuthor" placeholder="지은이 (선택)" maxlength="40">
               <textarea id="frReason" placeholder="한 줄 추천 이유*" maxlength="150"></textarea>
               <input type="text" id="frNickname" placeholder="닉네임 (선택)" maxlength="20">
               <button class="btn btn-primary" id="frSubmitBtn" onclick="submitFriendRec()">추천 남기기</button>
