@@ -373,49 +373,39 @@
 
   async function buildPages(){
     const chosen = submissions.filter(s => selected.has(s.batchId));
-    const subImages = await Promise.all(chosen.map(async sub => ({
-      name: sub.name,
-      imgs: await Promise.all(sub.files.map(f => loadImage(f.url)))
-    })));
+    // 학생 구분 없이 사진을 한 줄로 이어 붙이고, 이름은 각 카드 아래 여백에 적는다
+    const items = [];
+    for (const sub of chosen){
+      const imgs = await Promise.all(sub.files.map(f => loadImage(f.url)));
+      imgs.forEach(img => items.push({ name: sub.name, img }));
+    }
 
-    const LABEL_H = Math.round(0.75 * PX_PER_CM);
-    const GROUP_GAP = Math.round(0.35 * PX_PER_CM);
+    // 한 장에 COLS x ROWS 개, 가로·세로 가운데 정렬
+    const gridW = COLS * FILM_W + (COLS - 1) * GAP;
+    const gridH = ROWS * FILM_H + (ROWS - 1) * GAP;
+    const originX = Math.round((A4_W - gridW) / 2);
+    const originY = Math.round((A4_H - gridH) / 2);
+
+    const captionTop = PHOTO_OFFSET_Y + PHOTO_H;          // 카드 위에서 사진 끝까지
+    const captionH = FILM_H - captionTop;                 // 아래쪽 흰 여백 높이
+    const fontPx = Math.round(0.5 * PX_PER_CM);
 
     const pages = [];
-    let canvas = null, ctx = null, cursorY = 0;
-
-    function newPage(){
-      if (canvas) pages.push(canvas.toDataURL('image/png'));
-      canvas = document.createElement('canvas');
+    for (let start = 0; start < items.length; start += PER_PAGE){
+      const canvas = document.createElement('canvas');
       canvas.width = A4_W;
       canvas.height = A4_H;
-      ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d');
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, A4_W, A4_H);
-      cursorY = MARGIN;
-    }
-    newPage();
 
-    subImages.forEach(sub => {
-      const rows = Math.ceil(sub.imgs.length / COLS);
-      const blockH = LABEL_H + rows * FILM_H + (rows - 1) * GAP;
-      if (cursorY + blockH > A4_H - MARGIN){
-        newPage();
-      }
-
-      ctx.fillStyle = '#33302C';
-      ctx.font = `bold ${Math.round(LABEL_H * 0.55)}px sans-serif`;
-      ctx.textBaseline = 'middle';
-      ctx.fillText(sub.name, MARGIN, cursorY + LABEL_H / 2);
-      cursorY += LABEL_H;
-
-      sub.imgs.forEach((img, i) => {
+      items.slice(start, start + PER_PAGE).forEach((item, i) => {
         const col = i % COLS;
         const row = Math.floor(i / COLS);
-        const fx = MARGIN + col * (FILM_W + GAP); // 인화지(필름) 카드 좌상단
-        const fy = cursorY + row * (FILM_H + GAP);
+        const fx = originX + col * (FILM_W + GAP);
+        const fy = originY + row * (FILM_H + GAP);
 
-        // 인화지 전체 바탕 (흰색) + 절취선
+        // 인화지 바탕 + 검정 점선 테두리
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(fx, fy, FILM_W, FILM_H);
         ctx.save();
@@ -425,16 +415,26 @@
         ctx.strokeRect(fx, fy, FILM_W, FILM_H);
         ctx.restore();
 
-        // 사진은 인화지 안쪽에 여백을 두고 배치 (인스탁스 미니 스타일)
-        const px = fx + PHOTO_OFFSET_X;
-        const py = fy + PHOTO_OFFSET_Y;
-        drawCover(ctx, img, px, py, PHOTO_W, PHOTO_H);
+        // 사진 (인스탁스 미니 스타일)
+        drawCover(ctx, item.img, fx + PHOTO_OFFSET_X, fy + PHOTO_OFFSET_Y, PHOTO_W, PHOTO_H);
+
+        // 이름: 아래 여백 가운데, 칸에 맞게 글자 크기 조정
+        ctx.fillStyle = '#33302C';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        let size = fontPx;
+        ctx.font = `bold ${size}px "Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif`;
+        const maxW = FILM_W - 2 * PHOTO_OFFSET_X;
+        while (ctx.measureText(item.name).width > maxW && size > 10){
+          size -= 2;
+          ctx.font = `bold ${size}px "Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif`;
+        }
+        ctx.fillText(item.name, fx + FILM_W / 2, fy + captionTop + captionH / 2);
+        ctx.textAlign = 'left';
       });
 
-      cursorY += rows * FILM_H + (rows - 1) * GAP + GROUP_GAP;
-    });
-
-    pages.push(canvas.toDataURL('image/png'));
+      pages.push(canvas.toDataURL('image/png'));
+    }
     return pages;
   }
 
