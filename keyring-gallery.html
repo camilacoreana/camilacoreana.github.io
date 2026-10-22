@@ -143,6 +143,14 @@
     color: #fff;
     cursor: pointer;
   }
+  .bar{ flex-wrap: wrap; }
+  .bar button.ghost{
+    background: var(--accent-soft);
+    color: var(--accent-deep);
+  }
+  .bar button.danger{
+    background: var(--danger);
+  }
   .bar button:disabled{ opacity: .4; cursor: not-allowed; }
   .bar button:not(:disabled):hover{ opacity: .88; }
 </style>
@@ -162,6 +170,8 @@
 
 <div class="bar">
   <span class="summary" id="summary">선택된 학생 없음</span>
+  <button id="selectAllBtn" class="ghost">전체 선택</button>
+  <button id="deleteBtn" class="danger" disabled>선택한 학생 삭제</button>
   <button id="printBtn" disabled>선택한 학생 인쇄하기</button>
 </div>
 
@@ -194,6 +204,8 @@
   const refreshBtn = document.getElementById('refreshBtn');
   const summaryEl = document.getElementById('summary');
   const printBtn = document.getElementById('printBtn');
+  const selectAllBtn = document.getElementById('selectAllBtn');
+  const deleteBtn = document.getElementById('deleteBtn');
 
   let submissions = []; // { batchId, name, time, files:[{name,url,index}] }
   let selected = new Set();
@@ -270,6 +282,7 @@
 
     stateEl.style.display = 'none';
     renderGrid();
+    updateBar();
   }
 
   function renderGrid(){
@@ -284,7 +297,6 @@
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.checked = selected.has(sub.batchId);
-      checkbox.disabled = sub.kind === 'legacy';
       checkbox.addEventListener('change', () => {
         if (checkbox.checked) selected.add(sub.batchId);
         else selected.delete(sub.batchId);
@@ -338,16 +350,56 @@
 
   function updateBar(){
     const count = selected.size;
-    const totalPhotos = submissions
-      .filter(s => selected.has(s.batchId))
-      .reduce((sum, s) => sum + s.files.length, 0);
+    const chosen = submissions.filter(s => selected.has(s.batchId));
+    const totalPhotos = chosen.reduce((sum, s) => sum + s.files.length, 0);
+    const printable = chosen.filter(s => s.kind !== 'legacy').length;
     if (count === 0){
       summaryEl.textContent = '선택된 학생 없음';
     } else {
       summaryEl.innerHTML = `<b>${count}명</b> 선택됨 · 총 <b>${totalPhotos}장</b>`;
     }
-    printBtn.disabled = count === 0;
+    printBtn.disabled = printable === 0;
+    deleteBtn.disabled = count === 0;
+    selectAllBtn.textContent = (submissions.length > 0 && count === submissions.length) ? '전체 해제' : '전체 선택';
+    selectAllBtn.disabled = submissions.length === 0;
   }
+
+  selectAllBtn.addEventListener('click', () => {
+    if (selected.size === submissions.length){
+      selected.clear();
+    } else {
+      submissions.forEach(s => selected.add(s.batchId));
+    }
+    renderGrid();
+    updateBar();
+  });
+
+  deleteBtn.addEventListener('click', async () => {
+    const chosen = submissions.filter(s => selected.has(s.batchId));
+    if (chosen.length === 0) return;
+    const photoCount = chosen.reduce((sum, s) => sum + s.files.length, 0);
+    if (!confirm(`선택한 ${chosen.length}명(사진 ${photoCount}장)을 삭제할까요?\n삭제하면 되돌릴 수 없어요.`)) return;
+
+    deleteBtn.disabled = true;
+    printBtn.disabled = true;
+    selectAllBtn.disabled = true;
+    const originalText = deleteBtn.textContent;
+    deleteBtn.textContent = '삭제 중...';
+    try {
+      const paths = [];
+      chosen.forEach(sub => sub.files.forEach(f => paths.push(f.fileName)));
+      for (let i = 0; i < paths.length; i += 100){
+        const { error } = await sb.storage.from(BUCKET).remove(paths.slice(i, i + 100));
+        if (error) throw error;
+      }
+    } catch (err){
+      console.error(err);
+      alert('삭제하지 못했어요: ' + (err && err.message ? err.message : '알 수 없는 오류'));
+    } finally {
+      deleteBtn.textContent = originalText;
+      loadFiles();
+    }
+  });
 
   function loadImage(url){
     return new Promise((resolve, reject) => {
@@ -372,7 +424,7 @@
   }
 
   async function buildPages(){
-    const chosen = submissions.filter(s => selected.has(s.batchId));
+    const chosen = submissions.filter(s => selected.has(s.batchId) && s.kind !== 'legacy');
     // 학생 구분 없이 사진을 한 줄로 이어 붙이고, 이름은 각 카드 아래 여백에 적는다
     const items = [];
     for (const sub of chosen){
@@ -467,7 +519,7 @@
       console.error(err);
       alert('인쇄 준비 중 오류가 발생했어요: ' + (err && err.message ? err.message : '알 수 없는 오류'));
     } finally {
-      printBtn.disabled = selected.size === 0;
+      updateBar();
       printBtn.textContent = originalText;
     }
   });
