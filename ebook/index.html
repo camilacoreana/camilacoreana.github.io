@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>복숭아 마을에서 피어난 꿈</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap">
+<style>
+/* Layout: one-screen reader — slim title bar, the page itself centred on a meadow-tinted ground, a control bar with "차례로 돌아가기" in the middle */
+:root{
+  --ground:#eef3e6;      /* pale meadow */
+  --bar:#f8faf3;
+  --ink:#24402f;
+  --ink-soft:#5d7464;
+  --green:#2b7a50;       /* back-cover green */
+  --green-ink:#ffffff;
+  --peach:#f2a07b;       /* 복숭아 */
+  --peach-soft:rgba(242,160,123,.28);
+  --line:rgba(36,64,47,.14);
+  --shadow:0 10px 30px rgba(36,64,47,.18),0 2px 6px rgba(36,64,47,.12);
+  --f-display:"Jua","Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-body:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --ground:#18231c;--bar:#1f2c24;--ink:#e6efe4;--ink-soft:#a5b8a9;--green:#4fae7c;--green-ink:#0f1a13;
+  --peach:#f4ad8c;--peach-soft:rgba(244,173,140,.30);--line:rgba(230,239,228,.14);
+  --shadow:0 10px 30px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --ground:#18231c;--bar:#1f2c24;--ink:#e6efe4;--ink-soft:#a5b8a9;--green:#4fae7c;--green-ink:#0f1a13;
+  --peach:#f4ad8c;--peach-soft:rgba(244,173,140,.30);--line:rgba(230,239,228,.14);
+  --shadow:0 10px 30px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35);color-scheme:dark}
+
+html,body{height:100%}
+body{background:var(--ground);color:var(--ink);font-family:var(--f-body);font-size:15px;overflow:hidden}
+.app{height:100%;display:flex;flex-direction:column}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  background:var(--bar);border-bottom:1px solid var(--line)}
+.brand{font-family:var(--f-display);font-size:18px;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.brand small{font-family:var(--f-body);font-size:12px;color:var(--ink-soft);margin-left:8px}
+.where{font-size:13px;color:var(--ink-soft);white-space:nowrap;font-variant-numeric:tabular-nums}
+.where b{color:var(--ink);font-weight:normal}
+
+.stage{flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;padding:14px;touch-action:pan-y pinch-zoom}
+.sheet{position:relative;display:flex}
+.pg{position:relative;flex:1 1 0;min-width:0;height:100%;background:#fffef9;box-shadow:var(--shadow);overflow:hidden}
+.pg.empty{background:transparent;box-shadow:none}
+.pg img{display:block;width:100%;height:100%;user-select:none;-webkit-user-drag:none}
+.pg.solo{border-radius:3px}
+.pg.left{border-radius:3px 0 0 3px}
+.pg.right{border-radius:0 3px 3px 0}
+/* gutter shading where the two pages meet */
+.pg.left::after,.pg.right::after{content:"";position:absolute;top:0;bottom:0;width:7%;pointer-events:none}
+.pg.left::after{right:0;background:linear-gradient(to left,rgba(0,0,0,.13),rgba(0,0,0,0))}
+.pg.right::after{left:0;background:linear-gradient(to right,rgba(0,0,0,.13),rgba(0,0,0,0))}
+.pg.empty::after{display:none}
+.sheet.enter{animation:enter .28s ease-out}
+.sheet.enter.back{animation-name:enterBack}
+@keyframes enter{from{opacity:.25;transform:translateX(18px)}to{opacity:1;transform:none}}
+@keyframes enterBack{from{opacity:.25;transform:translateX(-18px)}to{opacity:1;transform:none}}
+
+/* 차례 hotspots, placed over the printed contents page */
+.hot{position:absolute;display:block;border-radius:6px;outline:none;transition:background .15s;z-index:1}
+.hot:hover,.hot:focus-visible{background:var(--peach-soft)}
+.hot:focus-visible{box-shadow:0 0 0 2px var(--peach)}
+.toc-hint{position:absolute;left:50%;bottom:3.2%;transform:translateX(-50%);white-space:nowrap;
+  background:var(--green);color:var(--green-ink);font-size:13px;padding:6px 12px;border-radius:999px;pointer-events:none}
+.toc-hint{z-index:1;font-size:clamp(11px,1.1vw,18px)}
+.pg.is-toc .hot{animation:glow 1.6s ease-in-out 2}
+@keyframes glow{50%{background:var(--peach-soft)}}
+
+.nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;border:1px solid var(--line);
+  background:var(--bar);color:var(--ink);font-size:22px;line-height:1;cursor:pointer;display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.12);z-index:2}
+.nav:hover{background:var(--green);color:var(--green-ink)}
+.nav:focus-visible{outline:3px solid var(--peach);outline-offset:2px}
+.nav:disabled{opacity:.3;cursor:default;background:var(--bar);color:var(--ink)}
+.nav.prev{left:max(10px,env(safe-area-inset-left,0px))}
+.nav.next{right:max(10px,env(safe-area-inset-right,0px))}
+
+.bottom{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
+  padding-block:10px calc(10px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  background:var(--bar);border-top:1px solid var(--line)}
+.btn{font-family:var(--f-display);font-size:17px;border:0;border-radius:999px;padding:10px 22px;cursor:pointer;background:var(--green);color:var(--green-ink)}
+.btn:hover{filter:brightness(1.08)}
+.btn:focus-visible{outline:3px solid var(--peach);outline-offset:2px}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);font-size:15px;padding:9px 16px}
+.btn[aria-current="page"]{background:var(--peach);color:#3a2418}
+.section{font-size:13px;color:var(--ink-soft);min-width:0}
+
+@media (max-width:560px){
+  .brand small{display:none}
+  .stage{padding:10px 8px}
+  .nav{width:40px;height:40px;font-size:19px;opacity:.85}
+  .btn{font-size:16px;padding:9px 18px}
+  .btn.ghost{display:none}
+}
+/* large touch screens (e.g. a 27-inch stand display) */
+@media (min-width:1200px) and (min-height:700px){
+  .top{padding-block:14px}
+  .brand{font-size:24px}.brand small{font-size:15px}
+  .where{font-size:17px}
+  .stage{padding:20px 96px}
+  .nav{width:68px;height:68px;font-size:34px}
+  .nav.prev{left:max(18px,env(safe-area-inset-left,0px))}.nav.next{right:max(18px,env(safe-area-inset-right,0px))}
+  .bottom{gap:14px;padding-block:14px calc(14px + env(safe-area-inset-bottom,0px))}
+  .btn{font-size:22px;padding:14px 32px}
+  .btn.ghost{font-size:19px;padding:12px 22px}
+  .section{font-size:17px}
+}
+@media (min-width:900px) and (orientation:portrait){
+  .nav{width:64px;height:64px;font-size:32px}
+  .btn{font-size:22px;padding:14px 30px}.btn.ghost{font-size:19px;padding:12px 22px}
+  .brand{font-size:24px}.where,.section{font-size:17px}
+}
+@media (prefers-reduced-motion:reduce){.sheet.enter,.pg.is-toc .hot{animation:none}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">복숭아 마을에서 피어난 꿈<small>인천도림초등학교 어린이작가부 글 모음집</small></div>
+    <div class="where" id="where" aria-live="polite"></div>
+  </header>
+
+  <main class="stage" id="stage">
+    <button class="nav prev" id="prev" aria-label="이전 페이지">‹</button>
+    <div class="sheet" id="sheet"></div>
+    <button class="nav next" id="next" aria-label="다음 페이지">›</button>
+  </main>
+
+  <nav class="bottom">
+    <button class="btn ghost" id="toCover">표지</button>
+    <button class="btn" id="toToc">차례로 돌아가기</button>
+    <button class="btn ghost" id="mode" aria-pressed="false">한 쪽 보기</button>
+    <button class="btn ghost" id="full">전체 화면</button>
+    <span class="section" id="section"></span>
+  </nav>
+</div>
+
+<script>
+(function(){
+  // Book pages (PDF page numbers). Blank print pages 4, 6, 84, 104, 106, 126, 128, 144 have no image: skipped in single view, plain paper in spreads.
+  const BLANK=new Set([4,6,84,104,106,126,128,144]);
+  const SEQ=['cover'];
+  for(let p=1;p<=156;p++) if(!BLANK.has(p)) SEQ.push(p);
+  SEQ.push('back');
+  const TOC=5;
+  const SIZE={cover:[1100,1563],back:[1100,1564]}; const PAGE=[1100,1543];
+
+  // Contents: title, author, start page. Hotspot top/height in % of the printed 차례 page.
+  const ENTRIES=[
+    {t:'단편동화',p:7,y:20.0,h:3.2,head:1},
+    {t:'소원',a:'조한별',p:9,y:23.4},
+    {t:'방학까지 D-7',a:'이봄',p:17,y:26.85},
+    {t:'세계수',a:'원태린',p:29,y:30.25},
+    {t:'당신의 꿈은 무엇입니까?',a:'강지예',p:45,y:33.7},
+    {t:'언니의 썸 관찰기',a:'장연지',p:63,y:37.15},
+    {t:'과거를 헤매다',a:'이예솔',p:69,y:40.6},
+    {t:'코피와 콜라',a:'고결',p:75,y:44.05},
+    {t:'그림동화',p:83,y:51.2,h:3.2,head:1},
+    {t:'냥포스 고민 간식 가게',a:'김하은',p:85,y:54.6},
+    {t:'동시',p:105,y:61.9,h:3.2,head:1},
+    {t:'동시',a:'김연수',p:107,y:65.35},
+    {t:'동시',a:'이윤희',p:120,y:68.9},
+    {t:'만화',p:127,y:76.2,h:3.2,head:1},
+    {t:'견생 최대 고민',a:'하지민',p:129,y:79.6},
+    {t:'봄찌냥과 하찌냥',a:'김다은',p:145,y:83.95},
+  ];
+  const STARTS=ENTRIES.filter(e=>!e.head).sort((a,b)=>a.p-b.p);
+
+  const $=id=>document.getElementById(id);
+  const stage=$('stage'),sheet=$('sheet');
+  const store={get(){try{return localStorage.getItem('ebook-mode')}catch(e){return null}},set(v){try{localStorage.setItem('ebook-mode',v)}catch(e){}}};
+  let choice=store.get()||'auto';     // 'auto' | 'spread' | 'single'
+  let spread=false,V=[],idx=0,last=-1,anchor='cover';
+
+  const src=k=>'pages/'+(typeof k==='number'?String(k).padStart(3,'0'):k)+'.webp';
+  const dims=k=>SIZE[k]||PAGE;
+  const label=k=>k==='cover'?'앞표지':k==='back'?'뒤표지':k+'쪽';
+  const isNum=k=>typeof k==='number';
+
+  function current(k){
+    if(!isNum(k)) return null;
+    let hit=null; for(const e of STARTS){ if(e.p<=k) hit=e; } return hit;
+  }
+
+  function avail(){
+    const cs=getComputedStyle(stage);
+    return [stage.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight),
+            stage.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)];
+  }
+  function wantSpread(){
+    if(choice==='spread') return true;
+    if(choice==='single') return false;
+    const [aw,ah]=avail(); return aw>=640 && aw/ah>=1.1;
+  }
+  // Views: single = one page each (blank print pages skipped); spread = even page left, odd page right, like the printed book.
+  function build(){
+    V=[];
+    if(!spread){ SEQ.forEach(k=>V.push([k])); return; }
+    V.push(['cover']);
+    for(let p=0;p<=156;p+=2){
+      const L=p===0?null:(BLANK.has(p)?'blank':p);
+      const R=p+1>156?null:(BLANK.has(p+1)?'blank':p+1);
+      V.push([L,R]);
+    }
+    V.push(['back']);
+  }
+  function indexFor(k){
+    if(k==='cover') return 0;
+    if(k==='back') return V.length-1;
+    if(spread) return 1+Math.floor(k/2);
+    let n=k; while(BLANK.has(n)) n++; const j=SEQ.indexOf(n); return j>=0?j:0;
+  }
+  function keyOfView(v){ for(const k of v){ if(k==='cover'||k==='back'||isNum(k)) return k; } return 'cover'; }
+  const hashOf=k=>'#'+(isNum(k)?'p'+k:k);
+
+  function fit(){
+    const v=V[idx]; let w=0,h=0;
+    v.forEach(k=>{ const d=(k===null||k==='blank')?PAGE:dims(k); w+=d[0]; h=Math.max(h,d[1]); });
+    const [aw,ah]=avail(); const s=Math.min(aw/w,ah/h);
+    sheet.style.width=Math.floor(w*s)+'px'; sheet.style.height=Math.floor(h*s)+'px';
+  }
+
+  function addHotspots(pg){
+    pg.classList.add('is-toc');
+    for(const e of ENTRIES){
+      const a=document.createElement('a');
+      a.className='hot'; a.href='#p'+e.p;
+      a.style.left=(e.head?24:27)+'%'; a.style.width=(e.head?16:47)+'%';
+      a.style.top=e.y+'%'; a.style.height=(e.h||3.4)+'%';
+      a.setAttribute('aria-label',e.head?e.t+' 처음으로 가기':e.t+' ('+e.a+') 읽기, '+e.p+'쪽');
+      pg.appendChild(a);
+    }
+    const hint=document.createElement('div'); hint.className='toc-hint'; hint.textContent='제목을 누르면 그 글로 바로 가요';
+    pg.appendChild(hint);
+  }
+
+  function render(){
+    const v=V[idx];
+    sheet.textContent='';
+    v.forEach((k,i)=>{
+      const pg=document.createElement('div');
+      pg.className='pg '+(v.length===1?'solo':(i===0?'left':'right'));
+      if(k===null) pg.classList.add('empty');
+      else if(k!=='blank'){
+        const im=document.createElement('img'); im.src=src(k); im.draggable=false;
+        const cur=current(k);
+        im.alt=k==='cover'?'앞표지':k==='back'?'뒤표지':(k===TOC?'차례':(cur?cur.t+' '+label(k):label(k)));
+        pg.appendChild(im);
+        if(k===TOC) addHotspots(pg);
+      }
+      sheet.appendChild(pg);
+    });
+    fit();
+    if(last!==-1&&last!==idx){
+      sheet.classList.remove('enter','back'); void sheet.offsetWidth;
+      sheet.classList.add('enter'); if(idx<last) sheet.classList.add('back');
+    }
+    last=idx;
+    const nums=v.filter(isNum);
+    const k0=keyOfView(v);
+    $('where').innerHTML=nums.length===2?'<b>'+nums[0]+'–'+nums[1]+'쪽</b> / 156':'<b>'+label(k0)+'</b>'+(isNum(k0)?' / 156':'');
+    const onToc=v.includes(TOC);
+    const cur=nums.length?current(Math.max(...nums)):null;
+    $('section').textContent=onToc?'차례':(cur?cur.t+(cur.a?' · '+cur.a:''):'');
+    $('prev').disabled=idx===0; $('next').disabled=idx===V.length-1;
+    const tb=$('toToc');
+    tb.textContent=onToc?'지금 차례예요':'차례로 돌아가기';
+    onToc?tb.setAttribute('aria-current','page'):tb.removeAttribute('aria-current');
+    const mb=$('mode'); mb.textContent=spread?'한 쪽 보기':'양쪽 보기'; mb.setAttribute('aria-pressed',String(spread));
+    [idx-1,idx+1,idx+2].forEach(i=>{ if(i>=0&&i<V.length) V[i].forEach(k=>{ if(k&&k!=='blank'){ const im=new Image(); im.src=src(k);} }); });
+    if(onToc) STARTS.forEach(e=>{ const im=new Image(); im.src=src(e.p); });
+  }
+
+  function setLayout(){
+    const s=wantSpread();
+    if(s!==spread||!V.length){ spread=s; build(); idx=indexFor(anchor); last=-1; render(); }
+    else fit();
+  }
+  function go(i){
+    i=Math.max(0,Math.min(V.length-1,i));
+    const k=keyOfView(V[i]); const h=hashOf(k);
+    if(location.hash!==h) location.hash=h; else { anchor=k; idx=i; render(); }
+  }
+  function fromHash(){
+    const h=location.hash.slice(1);
+    anchor='cover';
+    if(h==='back') anchor='back';
+    else if(/^p\d+$/.test(h)){ const n=+h.slice(1); if(n>=1&&n<=156) anchor=n; }
+    if(!V.length){ spread=wantSpread(); build(); }
+    idx=indexFor(anchor); render();
+  }
+
+  $('prev').onclick=()=>go(idx-1);
+  $('next').onclick=()=>go(idx+1);
+  $('toToc').onclick=()=>go(indexFor(TOC));
+  $('toCover').onclick=()=>go(0);
+  $('mode').onclick=()=>{ choice=spread?'single':'spread'; store.set(choice); anchor=keyOfView(V[idx]); setLayout(); };
+  const fs=$('full');
+  if(!document.fullscreenEnabled) fs.hidden=true;
+  fs.onclick=()=>{ try{ (document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()).catch(()=>{}); }catch(e){} };
+  document.addEventListener('fullscreenchange',()=>{ fs.textContent=document.fullscreenElement?'전체 화면 끄기':'전체 화면'; });
+  addEventListener('hashchange',fromHash);
+  addEventListener('resize',()=>{ anchor=keyOfView(V[idx]); setLayout(); });
+  addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key==='PageDown'){go(idx+1);e.preventDefault();}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){go(idx-1);e.preventDefault();}
+    else if(e.key==='Home'){go(indexFor(TOC));}
+  });
+  // swipe
+  let sx=null,sy=0,multi=false;
+  stage.addEventListener('touchstart',e=>{multi=e.touches.length>1; if(!multi){sx=e.touches[0].clientX;sy=e.touches[0].clientY;}},{passive:true});
+  stage.addEventListener('touchend',e=>{
+    if(multi||sx===null||(window.visualViewport&&visualViewport.scale>1.05)){sx=null;return;}
+    const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy; sx=null;
+    if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.4) go(idx+(dx<0?1:-1));
+  },{passive:true});
+
+  fromHash();
+})();
+</script>
+</body>
+</html>
