@@ -438,6 +438,7 @@ table.list tr.click:hover td{background:#FFFAF6}
         <div class="row between" style="margin-bottom:10px">
           <span class="muted" id="tCount"></span>
           <div class="row">
+            <select id="tPrintMode" class="in" style="width:auto;padding:6px 10px" aria-label="인쇄 양식"><option value="plain">일반 양식</option><option value="genko">원고지 (400자)</option></select>
             <label class="muted"><input type="checkbox" id="tIncDraft"> 초고도 함께 넣기</label>
             <button class="btn small" id="btnPrint" disabled>선택한 글 인쇄하기</button>
           </div>
@@ -1144,9 +1145,110 @@ function openDetail(id){
   };
 }
 $("#btnPrint").addEventListener("click", () => makePrint(filtered().filter(d => tSel.has(d.id))));
+/* ---------- 원고지(400자) 인쇄 ---------- */
+const GK_COLS = 20, GK_ROWS = 20;
+const GK_PUNCT = new Set([".", ",", "。", "、"]);
+const GK_CLOSE = new Set(["”", "’", "\"", "'", "」", "』", ")"]);
+function gkTokens(text){
+  const t = String(text || "").replace(/ /g, " ").replace(/[ \t]+/g, " ");
+  const out = []; let i = 0;
+  while (i < t.length) {
+    const c = t[i];
+    if (/[0-9a-z]/.test(c) && i + 1 < t.length && /[0-9a-z]/.test(t[i+1])) { out.push(c + t[i+1]); i += 2; continue; }
+    if (c === "…") { out.push("…"); i++; continue; }
+    out.push(c); i++;
+  }
+  return out;
+}
+function gkFlow(text, lines, opts = {}){
+  // 한 문단을 원고지 줄에 채워요. 문단 첫 칸은 비워요.
+  let line = opts.noIndent ? [] : [""];
+  const toks = gkTokens(text.trim());
+  let prev = "";
+  const newLine = () => { lines.push(line); line = []; };
+  for (const tok of toks) {
+    if (tok === " ") {
+      if (!line.length || GK_PUNCT.has(prev)) { prev = tok; continue; }   // 줄 첫 칸·마침표/쉼표 뒤는 띄우지 않아요
+      if (line.length >= GK_COLS) { newLine(); prev = tok; continue; }
+      line.push(""); prev = tok; continue;
+    }
+    if (GK_PUNCT.has(tok) || (GK_CLOSE.has(tok) && /[.,?!]$/.test(line[line.length-1] || ""))) {
+      if (GK_CLOSE.has(tok) && line.length) { line[line.length-1] += tok; prev = tok; continue; } // 마침표와 닫는 따옴표는 한 칸에
+      if (line.length >= GK_COLS) { line[GK_COLS-1] += tok; prev = tok; continue; }            // 줄 끝 문장부호는 마지막 칸에 함께
+      if (!line.length && lines.length) { const last = lines[lines.length-1]; last[last.length-1] = (last[last.length-1] || "") + tok; prev = tok; continue; }
+      line.push(tok); prev = tok; continue;
+    }
+    if (line.length >= GK_COLS) newLine();
+    line.push(tok); prev = tok;
+  }
+  if (line.length) lines.push(line);
+}
+function gkCentered(text){
+  const max = GK_COLS - 4, rows = []; let cur = [];
+  for (const w of text.trim().split(/\s+/)) {
+    const wt = gkTokens(w);
+    if (cur.length && cur.length + 1 + wt.length > max) { rows.push(cur); cur = []; }
+    if (cur.length) cur.push("");
+    for (const t of wt) { if (cur.length >= max) { rows.push(cur); cur = []; } cur.push(t); }
+  }
+  if (cur.length) rows.push(cur);
+  return rows.map(r => { const pad = Math.max(2, Math.floor((GK_COLS - r.length) / 2)); return Array(pad).fill("").concat(r); });
+}
+function gkRight(text){
+  const toks = gkTokens(text.trim()).map(t => t === " " ? "" : t).slice(0, GK_COLS - 2);
+  return Array(GK_COLS - 2 - toks.length).fill("").concat(toks, ["", ""]);
+}
+function gkLines(d, which){
+  const lines = [[]];
+  const title = d.finalTitle || (which === "draft" ? gOf(d).label : "(제목 없음)");
+  gkCentered(title).forEach(r => lines.push(r));
+  lines.push(gkRight(`${d.grade}학년 ${d.cls}반`));
+  lines.push(gkRight(String(d.name || "")));
+  lines.push([]);
+  const body = which === "draft" ? (d.draftRaw || "") : (d.finalText || d.workText || d.draftRaw || "");
+  body.split(/\n+/).map(p => p.trim()).filter(Boolean).forEach(p => gkFlow(p, lines));
+  return lines;
+}
+function gkCell(c){
+  if (!c) return `<i></i>`;
+  const cls = GK_PUNCT.has(c) ? "p" : (/^[.,]$/.test(c.slice(-1)) && c.length === 2 && !/[0-9a-z]{2}/.test(c)) ? "wp" : (c.length >= 2 ? "two" : "");
+  if (cls === "wp") return `<i class="wp">${esc(c[0])}<s>${esc(c[1])}</s></i>`;
+  return `<i class="${cls}">${esc(c)}</i>`;
+}
+function gkPages(d, which){
+  const lines = gkLines(d, which);
+  const pages = [];
+  for (let i = 0; i < lines.length; i += GK_ROWS) pages.push(lines.slice(i, i + GK_ROWS));
+  return pages.map((pg, pi) => {
+    while (pg.length < GK_ROWS) pg.push([]);
+    const rows = pg.map(r => { const cells = r.slice(0, GK_COLS); while (cells.length < GK_COLS) cells.push(""); return `<div class="r">${cells.map(gkCell).join("")}</div>`; }).join("");
+    return `<section class="gp"><div class="sheet">${rows}</div><div class="ft"><span>${esc(d.grade)}학년 ${esc(d.cls)}반 ${esc(d.num)}번 ${esc(d.name)}${which === "draft" ? " · 초고" : ""}</span><span>(20×20) ${pi+1}/${pages.length}</span></div></section>`;
+  });
+}
+function genkoDoc(list, incDraft){
+  const secs = [];
+  list.forEach(d => { secs.push(...gkPages(d, "final")); if (incDraft && d.draftRaw) secs.push(...gkPages(d, "draft")); });
+  return `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>원고지 글 모음</title>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>@page{size:A4;margin:14mm 18mm}
+body{margin:0;font-family:"Gowun Dodum",sans-serif;color:#222;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.gp{page-break-after:always;width:170mm;margin:0 auto}.gp:last-child{page-break-after:auto}
+.sheet{border:1.6px solid #C8553D;padding:2.4mm 0 0}
+.r{display:grid;grid-template-columns:repeat(20,1fr);height:8.5mm;border-top:1px solid #C8553D;border-bottom:1px solid #C8553D;margin-bottom:2.4mm}
+.r i{font-style:normal;border-right:1px solid #E3A08E;display:flex;align-items:center;justify-content:center;font-size:15pt;line-height:1;position:relative}
+.r i:last-child{border-right:none}
+.r i.two{font-size:11pt;letter-spacing:-.5px}
+.r i.p{align-items:flex-end;justify-content:flex-start;padding:0 0 1.2mm 1.4mm}
+.r i.wp s{text-decoration:none;position:absolute;right:.6mm;bottom:.6mm;font-size:12pt}
+.ft{display:flex;justify-content:space-between;font-size:9pt;color:#9B5A48;margin-top:2mm}
+.tip{font-size:10pt;color:#888;text-align:center;margin:10px}@media print{.tip{display:none}}
+@media screen{body{background:#f4efe9}.gp{background:#fff;padding:8mm;margin:10px auto;box-shadow:0 1px 4px rgba(0,0,0,.15)}}</style></head>
+<body><p class="tip">Ctrl+P(맥은 ⌘+P)를 눌러 인쇄하세요. 400자 원고지 한 장씩 나와요. 인쇄 설정에서 '배경 그래픽'을 켜면 선이 더 또렷해요.</p>${secs.join("")}</body></html>`;
+}
 async function makePrint(list){
   if (!list.length) return;
   const inc = $("#tIncDraft").checked;
+  const genko = $("#tPrintMode").value === "genko";
   const pages = list.map(d => `<section class="pg">
     <div class="meta">${esc(d.grade)}학년 ${esc(d.cls)}반 ${esc(d.num)}번 <b>${esc(d.name)}</b></div>
     <div class="book">${esc(gOf(d).label)}${aboutLine(d) ? " · " + esc(aboutLine(d)) : ""}</div>
@@ -1155,7 +1257,7 @@ async function makePrint(list){
     ${(d.stars || d.recommendTo) ? `<div class="rec">${d.stars ? "추천 별점 " + "★".repeat(d.stars) + "☆".repeat(5-d.stars) : ""}${d.recommendTo ? " · " + esc(d.recommendTo) + "에게 추천해요" : ""}</div>` : ""}
     ${inc && d.draftRaw ? `<h2>처음 쓴 초고</h2><div class="txt draft">${esc(d.draftRaw)}</div>` : ""}
   </section>`).join("");
-  const html = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>글 모음</title>
+  const html = genko ? genkoDoc(list, inc) : `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>글 모음</title>
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
 <style>@page{size:A4;margin:18mm 16mm}body{font-family:"Gowun Dodum",sans-serif;color:#222;margin:0;line-height:1.85;font-size:12.5pt}
 .pg{page-break-after:always;padding:6mm 2mm}.pg:last-child{page-break-after:auto}
