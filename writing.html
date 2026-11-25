@@ -450,7 +450,7 @@ table.list tr.click:hover td{background:#FFFAF6}
             <tbody id="tBody"></tbody>
           </table>
         </div>
-        <p class="muted" style="margin-top:10px">💡 인쇄 창이 새로 열려요. 한 장에 한 편씩 A4로 나오고, 'PDF로 저장'을 고르면 파일로도 받을 수 있어요.</p>
+        <p class="muted" style="margin-top:10px">💡 인쇄 미리보기 창이 새로 열려요. 위쪽에서 일반 양식과 원고지 양식 중 골라 인쇄하세요. 'PDF로 저장'을 고르면 파일로도 받을 수 있어요.</p>
       </div>
     </div>
   </section>
@@ -1144,6 +1144,131 @@ function openDetail(id){
   };
 }
 $("#btnPrint").addEventListener("click", () => makePrint(filtered().filter(d => tSel.has(d.id))));
+/* ---------- 원고지(400자) 인쇄 ---------- */
+const GK_COLS = 20, GK_ROWS = 20;
+const GK_PUNCT = new Set([".", ",", "。", "、"]);
+const GK_CLOSE = new Set(["”", "’", "\"", "'", "」", "』", ")"]);
+function gkTokens(text){
+  const t = String(text || "").replace(/ /g, " ").replace(/[ \t]+/g, " ");
+  const out = []; let i = 0;
+  while (i < t.length) {
+    const c = t[i];
+    if (/[0-9a-z]/.test(c) && i + 1 < t.length && /[0-9a-z]/.test(t[i+1])) { out.push(c + t[i+1]); i += 2; continue; }
+    if (c === "…") { out.push("…"); i++; continue; }
+    out.push(c); i++;
+  }
+  return out;
+}
+function gkFlow(text, lines, opts = {}){
+  // 한 문단을 원고지 줄에 채워요. 문단 첫 칸은 비워요.
+  let line = opts.noIndent ? [] : [""];
+  const toks = gkTokens(text.trim());
+  let prev = "";
+  const newLine = () => { lines.push(line); line = []; };
+  for (const tok of toks) {
+    if (tok === " ") {
+      if (!line.length || GK_PUNCT.has(prev)) { prev = tok; continue; }   // 줄 첫 칸·마침표/쉼표 뒤는 띄우지 않아요
+      if (line.length >= GK_COLS) { newLine(); prev = tok; continue; }
+      line.push(""); prev = tok; continue;
+    }
+    if (GK_PUNCT.has(tok) || (GK_CLOSE.has(tok) && /[.,?!]$/.test(line[line.length-1] || ""))) {
+      if (GK_CLOSE.has(tok) && line.length) { line[line.length-1] += tok; prev = tok; continue; } // 마침표와 닫는 따옴표는 한 칸에
+      if (line.length >= GK_COLS) { line[GK_COLS-1] += tok; prev = tok; continue; }            // 줄 끝 문장부호는 마지막 칸에 함께
+      if (!line.length && lines.length) { const last = lines[lines.length-1]; last[last.length-1] = (last[last.length-1] || "") + tok; prev = tok; continue; }
+      line.push(tok); prev = tok; continue;
+    }
+    if (line.length >= GK_COLS) newLine();
+    line.push(tok); prev = tok;
+  }
+  if (line.length) lines.push(line);
+}
+function gkCentered(text){
+  const max = GK_COLS - 4, rows = []; let cur = [];
+  for (const w of text.trim().split(/\s+/)) {
+    const wt = gkTokens(w);
+    if (cur.length && cur.length + 1 + wt.length > max) { rows.push(cur); cur = []; }
+    if (cur.length) cur.push("");
+    for (const t of wt) { if (cur.length >= max) { rows.push(cur); cur = []; } cur.push(t); }
+  }
+  if (cur.length) rows.push(cur);
+  return rows.map(r => { const pad = Math.max(2, Math.floor((GK_COLS - r.length) / 2)); return Array(pad).fill("").concat(r); });
+}
+function gkRight(text){
+  const toks = gkTokens(text.trim()).map(t => t === " " ? "" : t).slice(0, GK_COLS - 2);
+  return Array(GK_COLS - 2 - toks.length).fill("").concat(toks, ["", ""]);
+}
+function gkLines(d, which){
+  const lines = [[]];
+  const title = d.finalTitle || (which === "draft" ? gOf(d).label : "(제목 없음)");
+  gkCentered(title).forEach(r => lines.push(r));
+  lines.push(gkRight(`${d.grade}학년 ${d.cls}반`));
+  lines.push(gkRight(String(d.name || "")));
+  lines.push([]);
+  const body = which === "draft" ? (d.draftRaw || "") : (d.finalText || d.workText || d.draftRaw || "");
+  body.split(/\n+/).map(p => p.trim()).filter(Boolean).forEach(p => gkFlow(p, lines));
+  return lines;
+}
+function gkCell(c){
+  if (!c) return `<i></i>`;
+  const cls = GK_PUNCT.has(c) ? "p" : (/^[.,]$/.test(c.slice(-1)) && c.length === 2 && !/[0-9a-z]{2}/.test(c)) ? "wp" : (c.length >= 2 ? "two" : "");
+  if (cls === "wp") return `<i class="wp">${esc(c[0])}<s>${esc(c[1])}</s></i>`;
+  return `<i class="${cls}">${esc(c)}</i>`;
+}
+function gkPages(d, which){
+  const lines = gkLines(d, which);
+  const pages = [];
+  for (let i = 0; i < lines.length; i += GK_ROWS) pages.push(lines.slice(i, i + GK_ROWS));
+  return pages.map((pg, pi) => {
+    while (pg.length < GK_ROWS) pg.push([]);
+    const rows = pg.map(r => { const cells = r.slice(0, GK_COLS); while (cells.length < GK_COLS) cells.push(""); return `<div class="r">${cells.map(gkCell).join("")}</div>`; }).join("");
+    return `<section class="gp"><div class="sheet">${rows}</div><div class="ft"><span>${esc(d.grade)}학년 ${esc(d.cls)}반 ${esc(d.num)}번 ${esc(d.name)}${which === "draft" ? " · 초고" : ""}</span><span>(20×20) ${pi+1}/${pages.length}</span></div></section>`;
+  });
+}
+function printDoc(list, incDraft, plainPages){
+  const secs = [];
+  list.forEach(d => { secs.push(...gkPages(d, "final")); if (incDraft && d.draftRaw) secs.push(...gkPages(d, "draft")); });
+  return `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>글 모음</title>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
+<style>@page{size:A4;margin:14mm 16mm}
+body{margin:0;font-family:"Gowun Dodum",sans-serif;color:#222;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body.m-plain #v-genko, body.m-genko #v-plain{display:none}
+.bar{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;padding:12px;background:#FFF8F1;border-bottom:2px solid #EEDFD3;font-size:15px}
+.bar b{font-family:"Jua",sans-serif;font-weight:400;font-size:18px;margin-right:4px}
+.bar button{font:inherit;border:2px solid #EEDFD3;background:#fff;border-radius:999px;padding:7px 18px;cursor:pointer}
+.bar button.on{background:#3B2F2A;color:#fff;border-color:#3B2F2A}
+.bar #go{background:#F28C6B;color:#fff;border-color:#F28C6B;font-family:"Jua",sans-serif;font-size:17px;margin-left:10px}
+.bar .hint{width:100%;text-align:center;color:#888;font-size:12.5px}
+@media print{.bar{display:none}}
+@media screen{body{background:#f4efe9}.pg,.gp{background:#fff;padding:10mm;margin:12px auto;box-shadow:0 1px 4px rgba(0,0,0,.15)}.pg{width:178mm;box-sizing:border-box}}
+#v-plain{line-height:1.85;font-size:12.5pt}
+.pg{page-break-after:always;padding:6mm 2mm}.pg:last-child{page-break-after:auto}
+.pg .meta{font-size:11pt;color:#555;border-bottom:2px solid #F28C6B;padding-bottom:4px}
+.pg .book{margin-top:8px;color:#555}.pg h1{font-family:"Jua",sans-serif;font-weight:400;font-size:22pt;margin:6px 0 12px}
+.pg h2{font-family:"Jua",sans-serif;font-weight:400;font-size:13pt;margin:22px 0 6px;color:#777}
+.pg .txt{white-space:pre-wrap;word-break:keep-all}.pg .draft{font-size:11pt;color:#555;border:1px dashed #ccc;padding:8px 10px;border-radius:6px}
+.pg .rec{margin-top:14px;padding-top:8px;border-top:1px dashed #ccc;font-size:11pt}
+.gp{page-break-after:always;width:170mm;margin:0 auto}.gp:last-child{page-break-after:auto}
+.sheet{border:1.6px solid #C8553D;padding:2.4mm 0 0}
+.r{display:grid;grid-template-columns:repeat(20,1fr);height:8.5mm;border-top:1px solid #C8553D;border-bottom:1px solid #C8553D;margin-bottom:2.4mm}
+.r i{font-style:normal;border-right:1px solid #E3A08E;display:flex;align-items:center;justify-content:center;font-size:15pt;line-height:1;position:relative}
+.r i:last-child{border-right:none}
+.r i.two{font-size:11pt;letter-spacing:-.5px}
+.r i.p{align-items:flex-end;justify-content:flex-start;padding:0 0 1.2mm 1.4mm}
+.r i.wp s{text-decoration:none;position:absolute;right:.6mm;bottom:.6mm;font-size:12pt}
+.ft{display:flex;justify-content:space-between;font-size:9pt;color:#9B5A48;margin-top:2mm}</style></head>
+<body class="m-plain">
+<div class="bar"><b>인쇄 양식</b><button data-m="plain" class="on">📄 일반</button><button data-m="genko">📝 원고지 (400자)</button><button id="go">🖨️ 인쇄하기</button>
+<span class="hint">양식을 골라 모양을 확인한 뒤 인쇄하기를 누르세요. 원고지는 인쇄 설정에서 '배경 그래픽'을 켜면 선이 더 또렷해요.</span></div>
+<div id="v-plain">${plainPages}</div><div id="v-genko">${secs.join("")}</div>
+<script>
+document.querySelectorAll(".bar [data-m]").forEach(b => b.onclick = () => {
+  document.body.className = "m-" + b.dataset.m;
+  document.querySelectorAll(".bar [data-m]").forEach(x => x.classList.toggle("on", x === b));
+  window.scrollTo(0, 0);
+});
+document.getElementById("go").onclick = () => window.print();
+<\/script></body></html>`;
+}
 async function makePrint(list){
   if (!list.length) return;
   const inc = $("#tIncDraft").checked;
@@ -1155,21 +1280,11 @@ async function makePrint(list){
     ${(d.stars || d.recommendTo) ? `<div class="rec">${d.stars ? "추천 별점 " + "★".repeat(d.stars) + "☆".repeat(5-d.stars) : ""}${d.recommendTo ? " · " + esc(d.recommendTo) + "에게 추천해요" : ""}</div>` : ""}
     ${inc && d.draftRaw ? `<h2>처음 쓴 초고</h2><div class="txt draft">${esc(d.draftRaw)}</div>` : ""}
   </section>`).join("");
-  const html = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>글 모음</title>
-<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
-<style>@page{size:A4;margin:18mm 16mm}body{font-family:"Gowun Dodum",sans-serif;color:#222;margin:0;line-height:1.85;font-size:12.5pt}
-.pg{page-break-after:always;padding:6mm 2mm}.pg:last-child{page-break-after:auto}
-.meta{font-size:11pt;color:#555;border-bottom:2px solid #F28C6B;padding-bottom:4px}
-.book{margin-top:8px;color:#555}h1{font-family:"Jua",sans-serif;font-weight:400;font-size:22pt;margin:6px 0 12px}
-h2{font-family:"Jua",sans-serif;font-weight:400;font-size:13pt;margin:22px 0 6px;color:#777}
-.txt{white-space:pre-wrap;word-break:keep-all}.draft{font-size:11pt;color:#555;border:1px dashed #ccc;padding:8px 10px;border-radius:6px}
-.rec{margin-top:14px;padding-top:8px;border-top:1px dashed #ccc;font-size:11pt}
-.tip{font-size:10pt;color:#888;text-align:center;margin:10px}@media print{.tip{display:none}}</style></head>
-<body><p class="tip">Ctrl+P(맥은 ⌘+P)를 눌러 인쇄하세요. 한 장에 한 편씩 나와요.</p>${pages}</body></html>`;
+  const html = printDoc(list, inc, pages);
   const d = new Date(); const name = `글모음_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}_${list.length}편.html`;
   const w = window.open("", "_blank");
   if (!w) { tMsg("새 창이 막혔어요. 브라우저에서 팝업을 허용해 주세요."); return; }
-  w.document.open(); w.document.write(html.replace("</body>", `<script>window.onload=()=>setTimeout(()=>window.print(),600)<\/script></body>`)); w.document.close();
+  w.document.open(); w.document.write(html); w.document.close();
   w.document.title = name.replace(/\.html$/,"");
 }
 
