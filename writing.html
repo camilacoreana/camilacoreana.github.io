@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>복숭아숲 글쓰기 공방</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFF8F1; --paper:#FFFFFF; --ink:#3B2F2A; --sub:#7A6A62; --line:#EEDFD3;
+  --peach:#F28C6B; --peach-d:#D96E4C; --peach-l:#FFE6DA;
+  --leaf:#5E8F5B; --leaf-l:#E4F1E1; --sun:#FFE58A; --sky:#6F9FD8; --sky-l:#E5EFFB;
+  --red:#D9534F; --red-l:#FDE4E3;
+  --r:18px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Gowun Dodum",system-ui,sans-serif;font-size:18px;line-height:1.7}
+h1,h2,h3,.jua{font-family:"Jua","Gowun Dodum",sans-serif;font-weight:400;letter-spacing:.01em}
+button{font:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 18px 80px}
+.hidden{display:none!important}
+
+/* header */
+.top{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.logo{width:46px;height:46px;flex:none}
+.top h1{margin:0;font-size:28px;line-height:1.2}
+.top .who{margin-left:auto;font-size:15px;color:var(--sub);text-align:right}
+.savestate{font-size:13px;color:var(--leaf)}
+.savestate.err{color:var(--red)}
+
+/* cards / buttons */
+.card{background:var(--paper);border:2px solid var(--line);border-radius:var(--r);padding:22px}
+.btn{border:none;border-radius:999px;padding:12px 24px;background:var(--peach);color:#fff;font-family:"Jua",sans-serif;font-size:19px;box-shadow:0 3px 0 var(--peach-d);transition:transform .08s}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--peach-d)}
+.btn:disabled{background:#D9CCC4;box-shadow:none;cursor:not-allowed}
+.btn.leaf{background:var(--leaf);box-shadow:0 3px 0 #466e44}
+.btn.sky{background:var(--sky);box-shadow:0 3px 0 #4f7cb3}
+.btn.ghost{background:#fff;color:var(--ink);border:2px solid var(--line);box-shadow:none}
+.btn.small{padding:7px 16px;font-size:16px}
+.btn.danger{background:var(--red);box-shadow:0 3px 0 #a93c39}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.row.end{justify-content:flex-end}
+.between{justify-content:space-between}
+label.f{display:block;font-size:16px;color:var(--sub);margin-bottom:4px}
+.in{width:100%;border:2px solid var(--line);border-radius:12px;padding:10px 14px;background:#fff}
+.in:focus,textarea:focus,[contenteditable]:focus{outline:3px solid var(--peach-l);border-color:var(--peach)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media (max-width:760px){.grid2,.grid4{grid-template-columns:1fr 1fr}.top h1{font-size:22px}}
+.note{background:var(--sky-l);border-radius:14px;padding:12px 16px;font-size:16px}
+.note.warn{background:#FFF4D1}
+.note.err{background:var(--red-l)}
+.note.good{background:var(--leaf-l)}
+.muted{color:var(--sub);font-size:15px}
+
+/* home */
+.hero{text-align:center;padding:24px 10px 8px}
+.hero h2{font-size:34px;margin:6px 0}
+.hero p{color:var(--sub);margin:0}
+.flow{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:18px 0 26px}
+.flow span{background:#fff;border:2px solid var(--line);border-radius:999px;padding:4px 14px;font-size:15px}
+.flow i{font-style:normal;color:var(--peach);align-self:center}
+.home-card{max-width:620px;margin:0 auto}
+.resume-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.resume-item{display:flex;align-items:center;gap:10px;border:2px solid var(--line);border-radius:14px;padding:10px 14px;background:#fff}
+.resume-item b{flex:1}
+.teacher-link{display:block;margin:30px auto 0;background:none;border:none;color:var(--sub);text-decoration:underline;font-size:15px}
+
+/* stepper */
+.steps{display:flex;gap:6px;margin-bottom:18px;overflow-x:auto;padding-bottom:4px}
+.step{flex:1;min-width:110px;border:2px solid var(--line);border-radius:14px;background:#fff;padding:8px 10px;text-align:center;font-size:15px;color:var(--sub)}
+.step b{display:block;font-family:"Jua";font-weight:400;font-size:18px;color:var(--ink)}
+.step.done{background:var(--leaf-l);border-color:#bcd8b7}
+.step.now{background:var(--peach-l);border-color:var(--peach);color:var(--ink)}
+.step.lock{opacity:.55;cursor:default}
+.step:not(.lock){cursor:pointer}
+
+.panel h2{margin:0 0 4px;font-size:26px}
+.panel .lead{margin:0 0 16px;color:var(--sub)}
+
+/* tabs */
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tab{border:2px solid var(--line);background:#fff;border-radius:999px;padding:8px 18px;font-family:"Jua";font-size:17px}
+.tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* photo */
+.drop{border:3px dashed #E8CDBD;border-radius:var(--r);padding:26px;text-align:center;background:#FFFCF9}
+.drop.over{background:var(--peach-l)}
+.thumbs{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.thumb{position:relative;width:110px;height:140px;border-radius:10px;overflow:hidden;border:2px solid var(--line);background:#fff}
+.thumb img{width:100%;height:100%;object-fit:cover;cursor:zoom-in}
+.thumb button{position:absolute;top:4px;right:4px;width:28px;height:28px;border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;font-size:16px;line-height:1}
+.thumb .n{position:absolute;left:4px;bottom:4px;background:rgba(255,255,255,.9);border-radius:8px;padding:0 6px;font-size:13px}
+.compare{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:16px}
+@media (max-width:860px){.compare{grid-template-columns:1fr}}
+.photo-view{background:#fff;border:2px solid var(--line);border-radius:14px;padding:8px;max-height:620px;overflow:auto}
+.photo-view img{width:100%;display:block;border-radius:8px;margin-bottom:8px}
+.editor{min-height:320px;background:#fff;border:2px solid var(--line);border-radius:14px;padding:16px 18px;white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere;font-size:19px;line-height:1.9}
+textarea.editor{width:100%;resize:vertical;display:block}
+mark.unsure{background:var(--sun);border-radius:4px;padding:0 2px;cursor:pointer;box-shadow:inset 0 -3px 0 #F2C230}
+mark.unsure.checked{background:transparent;box-shadow:inset 0 -2px 0 #9CCB95}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:15px;margin:8px 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:22px;height:14px;border-radius:4px}
+
+/* spelling */
+.spell-text{background:#fff;border:2px solid var(--line);border-radius:14px;padding:16px 18px;white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere;font-size:19px;line-height:2.1}
+.fix{border-radius:6px;padding:1px 3px;cursor:pointer;position:relative}
+.fix.on{background:var(--leaf-l)}
+.fix.off{background:#F3EEEA}
+.fix del{color:var(--red);text-decoration-thickness:2px}
+.fix ins{color:var(--leaf);text-decoration:none;font-weight:bold}
+.fix sup{font-size:11px;color:var(--sub);margin-left:1px}
+.fixlist{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.fixlist li{display:flex;gap:10px;align-items:flex-start;background:#fff;border:2px solid var(--line);border-radius:14px;padding:10px 14px}
+.fixlist .num{flex:none;width:28px;height:28px;border-radius:50%;background:var(--peach-l);text-align:center;font-family:"Jua";line-height:28px}
+.fixlist .body{flex:1}
+.fixlist .pair{font-size:18px}
+.fixlist .pair del{color:var(--red)}
+.fixlist .pair ins{color:var(--leaf);text-decoration:none;font-weight:bold}
+.fixlist .why{font-size:15px;color:var(--sub)}
+.toggle{flex:none;border:2px solid var(--line);background:#fff;border-radius:999px;padding:2px 12px;font-size:14px}
+.toggle.on{background:var(--leaf);color:#fff;border-color:var(--leaf)}
+
+/* revise */
+.revise{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.revise{grid-template-columns:1fr}}
+.coach{background:#fff;border:2px solid var(--line);border-radius:var(--r);padding:18px;position:sticky;top:12px}
+.coach h3{margin:0 0 8px;font-size:21px}
+.meter{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:15px;margin:8px 0 14px}
+.dots{letter-spacing:2px;color:#D9CCC4}
+.dots b{color:var(--peach);font-weight:normal}
+.praise{background:var(--leaf-l);border-radius:14px;padding:12px 14px;margin-bottom:12px;font-size:16px}
+.qcard{border:2px solid var(--peach-l);background:#FFFBF8;border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.qcard .area{display:inline-block;font-size:13px;background:var(--peach-l);border-radius:999px;padding:0 10px;margin-bottom:4px}
+.qcard .q{font-size:18px}
+.qcard .hint{font-size:15px;color:var(--sub);margin-top:6px;border-top:1px dashed var(--line);padding-top:6px}
+.qcard button{background:none;border:none;color:var(--sky);font-size:14px;padding:0;margin-top:4px}
+.counter{font-size:14px;color:var(--sub);text-align:right;margin-top:4px}
+details.orig{margin-top:12px;background:#fff;border:2px solid var(--line);border-radius:14px;padding:10px 14px}
+details.orig summary{cursor:pointer;color:var(--sub)}
+details.orig div{white-space:pre-wrap;font-size:16px;margin-top:8px}
+.history{font-size:14px;color:var(--sub);margin-top:10px}
+.sc-item{border-top:1px dashed var(--line);padding:8px 0}
+.sc-item b{font-family:"Jua";font-weight:400;font-size:17px}
+.sc-item .d{font-size:14px;color:var(--sub);line-height:1.5}
+.sc-btns{display:flex;gap:6px;margin-top:6px}
+.sc-btns button{flex:1;border:2px solid var(--line);background:#fff;border-radius:999px;padding:3px 0;font-size:14px}
+.sc-btns button.on[data-v="0"]{background:var(--red-l);border-color:#E9A3A1}
+.sc-btns button.on[data-v="1"]{background:#FFF4D1;border-color:#F0D27A}
+.sc-btns button.on[data-v="2"]{background:var(--leaf-l);border-color:#9CCB95}
+
+/* final */
+.genres{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media (max-width:760px){.genres{grid-template-columns:1fr 1fr}}
+.genre{border:2px solid var(--line);background:#fff;border-radius:16px;padding:12px;text-align:left;line-height:1.4}
+.genre .ic{font-size:28px;display:block}
+.genre b{font-family:"Jua";font-weight:400;font-size:19px;display:block;margin:2px 0}
+.genre span{font-size:14px;color:var(--sub)}
+.genre.on{border-color:var(--peach);background:var(--peach-l);box-shadow:0 3px 0 #F3C2AE}
+.stars{display:flex;gap:4px}
+.stars button{background:none;border:none;font-size:30px;line-height:1;padding:0 2px;color:#E3D7CF}
+.stars button.on{color:#F5B31B}
+.preview{background:#fff;border:2px solid var(--line);border-radius:var(--r);padding:26px 28px;box-shadow:0 6px 0 #F1E4DA}
+.preview .bk{color:var(--sub);font-size:15px}
+.preview h3{font-size:28px;margin:4px 0 10px}
+.preview .txt{white-space:pre-wrap;word-break:keep-all;font-size:18px}
+.preview .rec{margin-top:14px;padding-top:10px;border-top:2px dashed var(--line);font-size:16px}
+.celebrate{text-align:center;padding:20px}
+.celebrate .big{font-size:60px}
+.growth{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}
+@media (max-width:640px){.growth{grid-template-columns:1fr 1fr}}
+.growth div{background:#fff;border:2px solid var(--line);border-radius:14px;padding:12px}
+.growth b{display:block;font-family:"Jua";font-weight:400;font-size:28px;color:var(--peach)}
+
+/* loader */
+.loading{display:flex;align-items:center;gap:12px;padding:16px;background:#fff;border:2px dashed var(--line);border-radius:14px;margin:12px 0}
+.spin{width:26px;height:26px;border:4px solid var(--peach-l);border-top-color:var(--peach);border-radius:50%;animation:sp 0.9s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* teacher */
+.tbar{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:14px}
+.tbar>div{min-width:120px}
+table.list{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;font-size:16px}
+table.list th,table.list td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+table.list th{background:#FBF1E9;font-weight:normal;color:var(--sub);font-size:14px}
+table.list tr.click{cursor:pointer}
+table.list tr.click:hover td{background:#FFFAF6}
+.badge{display:inline-block;border-radius:999px;padding:0 10px;font-size:13px;white-space:nowrap}
+.b-book,.b-draft{background:#F1ECE8}
+.b-spell,.b-revise{background:var(--sky-l)}
+.b-final{background:#FFF4D1}
+.b-submitted{background:var(--leaf-l)}
+.modal-bg{position:fixed;inset:0;background:rgba(59,47,42,.45);display:flex;align-items:flex-start;justify-content:center;padding:30px 12px;overflow:auto;z-index:20}
+.modal{background:var(--bg);border-radius:22px;max-width:900px;width:100%;padding:22px}
+.modal .txt{white-space:pre-wrap;word-break:keep-all;background:#fff;border:2px solid var(--line);border-radius:14px;padding:14px 16px;font-size:17px}
+.modal h3{margin:14px 0 6px}
+.zoom{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:30;padding:20px}
+.zoom img{max-width:100%;max-height:100%;border-radius:8px}
+.confirm-inline{display:inline-flex;gap:8px;align-items:center;background:var(--red-l);border-radius:999px;padding:4px 6px 4px 14px;font-size:15px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <svg class="logo" viewBox="0 0 48 48" aria-hidden="true">
+      <circle cx="24" cy="27" r="17" fill="#F7A585"/>
+      <path d="M24 12c-3 4-3 26 0 31" stroke="#E98563" stroke-width="2" fill="none"/>
+      <path d="M24 12c4-8 12-8 15-6-3 6-9 8-15 6z" fill="#6FA36B"/>
+      <path d="M13 38h22v4H13z" fill="#fff" opacity=".9"/>
+      <path d="M15 39h18" stroke="#D96E4C" stroke-width="1.4"/>
+    </svg>
+    <h1>복숭아숲 글쓰기 공방</h1>
+    <div class="who" id="who"></div>
+  </header>
+
+  <!-- ===== HOME ===== -->
+  <section id="home">
+    <div class="hero">
+      <h2>내 생각을 담은 글을 완성해요</h2>
+      <p>종이에 먼저 쓰고, 맞춤법 검사기와 질문 카드로 다듬어요.</p>
+    </div>
+    <div class="flow">
+      <span>✏️ 종이에 초고 쓰기</span><i>→</i><span>⌨️ 앱에 옮겨 쓰기</span><i>→</i><span>🔤 맞춤법 고치기</span><i>→</i><span>🔍 스스로 점검하며 다듬기</span><i>→</i><span>🌟 완성하기</span>
+    </div>
+    <div class="card home-card">
+      <h3 style="margin:0 0 12px;font-size:22px">나는 누구일까요?</h3>
+      <div class="grid4">
+        <div><label class="f" for="sGrade">학년</label>
+          <select id="sGrade" class="in"><option value="">선택</option><option>4</option><option>5</option><option>6</option></select></div>
+        <div><label class="f" for="sClass">반</label><input id="sClass" class="in" type="number" min="1" max="20" inputmode="numeric"></div>
+        <div><label class="f" for="sNum">번호</label><input id="sNum" class="in" type="number" min="1" max="50" inputmode="numeric"></div>
+        <div><label class="f" for="sName">이름</label><input id="sName" class="in" type="text" maxlength="10" autocomplete="off"></div>
+      </div>
+      <p id="homeMsg" class="note warn hidden" style="margin-top:12px"></p>
+      <div class="row end" style="margin-top:16px"><button class="btn" id="btnStart">시작하기</button></div>
+      <div id="resumeBox" class="hidden" style="margin-top:18px">
+        <div class="jua" style="font-size:19px">쓰고 있던 글이 있어요</div>
+        <div class="resume-list" id="resumeList"></div>
+        <div class="row end" style="margin-top:12px"><button class="btn leaf" id="btnNew">새 글 시작하기</button></div>
+      </div>
+    </div>
+    <p id="envNote" class="note warn hidden" style="max-width:620px;margin:16px auto 0"></p>
+    <button class="teacher-link" id="btnTeacher">선생님 화면</button>
+  </section>
+
+  <!-- ===== STUDENT ===== -->
+  <section id="student" class="hidden">
+    <nav class="steps" id="steps"></nav>
+
+    <!-- step 1 -->
+    <div class="card panel" data-step="1">
+      <h2>1. 어떤 글을 썼나요?</h2>
+      <p class="lead">종이에 쓴 글의 종류를 골라 주세요. 종류에 맞춰 질문 카드가 나와요.</p>
+      <div class="genres" id="genres"></div>
+      <div id="bookFields" class="grid2 hidden" style="margin-top:16px">
+        <div style="grid-column:1/-1"><label class="f" for="bTitle">읽은 책 제목 *</label><input id="bTitle" class="in" maxlength="80"></div>
+        <div><label class="f" for="bAuthor">지은이</label><input id="bAuthor" class="in" maxlength="60"></div>
+        <div><label class="f" for="bPub">출판사</label><input id="bPub" class="in" maxlength="40"></div>
+      </div>
+      <div id="topicFields" class="hidden" style="margin-top:16px">
+        <label class="f" for="bTopic" id="topicLabel">글감</label><input id="bTopic" class="in" maxlength="80">
+      </div>
+      <p id="step1Msg" class="note warn hidden" style="margin-top:12px"></p>
+      <div class="note" style="margin-top:16px">📝 종이에 초고를 다 썼나요? 아직이라면 먼저 종이에 초고를 써 오세요.</div>
+      <div class="row between" style="margin-top:18px">
+        <button class="btn ghost" data-act="home">처음으로</button>
+        <button class="btn" id="btnStep1">다음: 초고 옮기기</button>
+      </div>
+    </div>
+
+    <!-- step 2 -->
+    <div class="card panel hidden" data-step="2">
+      <h2>2. 종이에 쓴 초고를 옮겨요</h2>
+      <p class="lead">종이를 옆에 두고, 쓴 글을 한 줄씩 옮겨 적어요. 옮기면서 내 글을 한 번 더 읽게 돼요.</p>
+      <div class="tabs hidden">
+        <button class="tab" data-tab="photo">📷 사진으로 올리기</button>
+        <button class="tab on" data-tab="type">⌨️ 직접 입력하기</button>
+      </div>
+
+      <div id="tabPhoto" class="hidden">
+        <div id="photoPick">
+          <div class="drop" id="drop">
+            <div style="font-size:40px">📷</div>
+            <div>원고 사진을 찍거나 골라 주세요 <span class="muted">(여러 장이면 순서대로, 최대 4장)</span></div>
+            <div class="row" style="justify-content:center;margin-top:12px">
+              <label class="btn sky" for="fileIn" style="display:inline-block">사진 고르기</label>
+              <input id="fileIn" type="file" accept="image/*" multiple class="hidden">
+            </div>
+            <div class="muted" style="margin-top:8px">💡 밝은 곳에서, 종이 전체가 반듯하게 나오도록 찍어요.</div>
+          </div>
+          <div class="thumbs" id="thumbs"></div>
+          <div class="row end" style="margin-top:14px"><button class="btn" id="btnOcr" disabled>✨ 글자로 바꾸기</button></div>
+        </div>
+        <div id="ocrLoading" class="loading hidden"><div class="spin"></div><div>AI가 글씨를 꼼꼼히 읽고 있어요… 조금만 기다려 주세요.</div></div>
+        <div id="ocrMsg" class="note err hidden" style="margin-top:12px"></div>
+
+        <div id="ocrResult" class="hidden" style="margin-top:6px">
+          <div class="note warn">
+            <b>종이와 한 줄씩 비교해 보세요!</b><br>
+            <span style="background:var(--sun);padding:0 4px;border-radius:4px">노란색</span> 은 AI가 잘 못 읽은 곳이에요. 종이를 보고 맞게 고치거나, 이미 맞으면 눌러서 확인해요.
+            노란색이 아닌 곳도 종이와 다르면 고쳐 주세요. <b>맞춤법은 다음 단계에서 고칠 거예요. 지금은 종이에 쓴 그대로!</b>
+          </div>
+          <div class="legend"><span><i class="sw" style="background:var(--sun)"></i>확인이 필요한 곳</span><span><i class="sw" style="box-shadow:inset 0 -3px 0 #9CCB95"></i>확인한 곳</span><span id="unsureCount" class="jua" style="color:var(--peach-d)"></span></div>
+          <div class="compare">
+            <div class="photo-view" id="photoView"></div>
+            <div><div class="editor" id="ocrEditor" contenteditable="plaintext-only" spellcheck="false"></div>
+            <div class="counter" id="ocrCount"></div></div>
+          </div>
+          <div class="row between" style="margin-top:12px">
+            <button class="btn ghost small" id="btnOcrRetry">사진 다시 올리기</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="tabType">
+        <div class="note" style="margin-bottom:10px">종이에 쓴 그대로 옮겨 적어요. 틀린 글자가 있어도 지금은 고치지 말고 그대로! 문단이 바뀌는 곳은 엔터를 두 번 눌러요.</div>
+        <textarea id="typeEditor" class="editor" rows="14" spellcheck="false"></textarea>
+        <div class="counter" id="typeCount"></div>
+      </div>
+
+      <div id="step2Confirm" class="note warn hidden" style="margin-top:12px"></div>
+      <div class="row between" style="margin-top:18px">
+        <button class="btn ghost" data-go="1">이전</button>
+        <button class="btn" id="btnStep2">초고 확정하고 다음으로</button>
+      </div>
+    </div>
+
+    <!-- step 3 -->
+    <div class="card panel hidden" data-step="3">
+      <h2>3. 맞춤법을 고쳐요</h2>
+      <p class="lead">맞춤법 검사기(부산대학교 나라스펠러)가 맞춤법과 띄어쓰기를 살펴봐요. 고친 이유를 읽어 보고, 고친 곳을 누르면 원래대로 되돌릴 수도 있어요.</p>
+      <div id="spellMain"></div>
+      <div class="row between" style="margin-top:18px">
+        <button class="btn ghost" data-go="2">이전</button>
+        <button class="btn" id="btnStep3">다음: 내용 다듬기</button>
+      </div>
+    </div>
+
+    <!-- step 4 -->
+    <div class="card panel hidden" data-step="4">
+      <h2>4. 내용을 다듬어요</h2>
+      <p class="lead">내 글을 다시 읽고 스스로 점검해요. 부족한 부분은 질문 카드를 보며 고쳐 써요.</p>
+      <div class="revise">
+        <div>
+          <textarea id="workEditor" class="editor" rows="18" spellcheck="false"></textarea>
+          <div class="counter" id="workCount"></div>
+          <details class="orig"><summary>처음 쓴 초고 보기</summary><div id="origText"></div></details>
+        </div>
+        <aside class="coach">
+          <h3>🔍 스스로 점검하기</h3>
+          <p class="muted" style="margin:0 0 8px">내 글에 아래 네 가지가 얼마나 들어 있는지 골라 봐요.</p>
+          <div id="selfCheck"></div>
+          <div id="coachMsg" class="note warn hidden"></div>
+          <button class="btn sky" id="btnCoach" style="width:100%;margin-top:10px">질문 카드 받기</button>
+          <div id="coachBody" style="margin-top:12px"></div>
+          <div class="history" id="coachHistory"></div>
+        </aside>
+      </div>
+      <div class="row between" style="margin-top:18px">
+        <button class="btn ghost" data-go="3">이전</button>
+        <button class="btn" id="btnStep4">다듬기 끝! 완성하러 가기</button>
+      </div>
+    </div>
+
+    <!-- step 5 -->
+    <div class="card panel hidden" data-step="5">
+      <h2>5. 글을 완성해요</h2>
+      <p class="lead">글에 어울리는 제목을 붙이고, 마지막으로 한 번 더 읽어 봐요.</p>
+      <div class="grid2">
+        <div style="grid-column:1/-1">
+          <label class="f" for="fTitle">글 제목 *</label>
+          <input id="fTitle" class="in" maxlength="60" placeholder="내 글만의 제목">
+          <div class="muted" id="titleTip"></div>
+        </div>
+        <div class="recOnly"><label class="f">추천 별점</label><div class="stars" id="stars"></div></div>
+        <div class="recOnly"><label class="f" for="fRec">이런 친구에게 추천해요</label><input id="fRec" class="in" maxlength="60" placeholder="예: 동생과 자주 싸우는 친구"></div>
+        <div style="grid-column:1/-1">
+          <label class="f" for="finalEditor">본문</label>
+          <textarea id="finalEditor" class="editor" rows="14" spellcheck="false"></textarea>
+          <div class="row between"><button class="btn ghost small" id="btnFinalSpell">🔤 마지막 맞춤법 점검</button><span class="counter" id="finalCount"></span></div>
+          <div id="finalSpell" class="hidden" style="margin-top:12px"></div>
+        </div>
+      </div>
+      <h3 style="margin:22px 0 8px">미리 보기</h3>
+      <div class="preview" id="preview"></div>
+      <p id="step5Msg" class="note warn hidden" style="margin-top:12px"></p>
+      <div class="row between" style="margin-top:18px">
+        <button class="btn ghost" data-go="4">이전</button>
+        <button class="btn leaf" id="btnSubmit">선생님께 제출하기 📮</button>
+      </div>
+    </div>
+
+    <!-- done -->
+    <div class="card panel hidden" data-step="6">
+      <div class="celebrate">
+        <div class="big">🎉</div>
+        <h2>글을 완성했어요!</h2>
+        <p class="lead">초고에서 완성본까지, 이렇게 자랐어요.</p>
+        <div class="growth" id="growth"></div>
+        <div class="note good" style="text-align:left">✏️ 완성한 글을 보며 원고지나 활동지에 깨끗하게 옮겨 써도 좋아요. 선생님이 완성본을 모아 인쇄해 주실 수도 있어요.</div>
+        <div class="row" style="justify-content:center;margin-top:18px">
+          <button class="btn ghost" data-go="5">완성본 다시 보기</button>
+          <button class="btn" data-act="home">처음으로</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TEACHER ===== -->
+  <section id="teacher" class="hidden">
+    <div id="tGate" class="card home-card">
+      <h2 style="margin:0 0 8px">선생님 화면</h2>
+      <p class="muted" id="tGateLead" style="margin-top:0">비밀번호를 입력해 주세요.</p>
+      <input id="tPin" class="in" type="password" maxlength="60" placeholder="선생님 비밀번호" style="max-width:280px" autocomplete="current-password">
+      <p id="tGateMsg" class="note warn hidden" style="margin-top:10px"></p>
+      <p class="muted" style="font-size:13px">비밀번호는 Supabase의 Edge Function 비밀값(TEACHER_PIN)에서 정하고 바꿀 수 있어요.</p>
+      <div class="row between" style="margin-top:12px"><button class="btn ghost" data-act="home">처음으로</button><button class="btn" id="btnPin">들어가기</button></div>
+    </div>
+
+    <div id="tMain" class="hidden">
+      <div class="row between" style="margin-bottom:12px">
+        <h2 style="margin:0;font-size:26px">학생 글 모아 보기</h2>
+        <div class="row"><button class="btn ghost small" id="btnPinChange">🔄 새로고침</button><button class="btn ghost small" id="btnTLogout">나가기</button></div>
+      </div>
+      <div class="card">
+        <div class="tbar">
+          <div><label class="f" for="tfGrade">학년</label><select id="tfGrade" class="in"><option value="">전체</option><option>4</option><option>5</option><option>6</option></select></div>
+          <div><label class="f" for="tfClass">반</label><select id="tfClass" class="in"><option value="">전체</option></select></div>
+          <div><label class="f" for="tfGenre">종류</label><select id="tfGenre" class="in"></select></div>
+          <div><label class="f" for="tfStatus">상태</label><select id="tfStatus" class="in">
+            <option value="">전체</option><option value="submitted">제출 완료</option><option value="progress">쓰는 중</option></select></div>
+          <div style="flex:1"><label class="f" for="tfSearch">이름·책·제목 검색</label><input id="tfSearch" class="in" placeholder="검색"></div>
+        </div>
+        <div class="row between" style="margin-bottom:10px">
+          <span class="muted" id="tCount"></span>
+          <div class="row">
+            <label class="muted"><input type="checkbox" id="tIncDraft"> 초고도 함께 넣기</label>
+            <button class="btn small" id="btnPrint" disabled>선택한 글 인쇄하기</button>
+          </div>
+        </div>
+        <div id="tLoading" class="loading"><div class="spin"></div><div>글을 불러오는 중…</div></div>
+        <p id="tMsg" class="note warn hidden"></p>
+        <div style="overflow-x:auto">
+          <table class="list" id="tTable">
+            <thead><tr><th><input type="checkbox" id="tAll" aria-label="모두 선택"></th><th>학년-반-번호</th><th>이름</th><th>종류</th><th>책·글감</th><th>글 제목</th><th>상태</th><th>마지막 저장</th></tr></thead>
+            <tbody id="tBody"></tbody>
+          </table>
+        </div>
+        <p class="muted" style="margin-top:10px">💡 인쇄 창이 새로 열려요. 한 장에 한 편씩 A4로 나오고, 'PDF로 저장'을 고르면 파일로도 받을 수 있어요.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="modalRoot"></div>
+
+<script>
+(() => {
+"use strict";
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const STEP_NAMES = ["글 종류","초고 옮기기","맞춤법","내용 다듬기","완성하기"];
+const STATUS_LABEL = {book:"글 종류",draft:"초고",spell:"맞춤법",revise:"다듬는 중",final:"완성 중",submitted:"제출 완료"};
+const GENRES = {
+  review:  { label:"서평", ic:"📖", desc:"책을 소개하고 평가하며 추천하는 글", book:true,
+    tip:"내가 가장 하고 싶은 말, 인상 깊은 장면, 책에서 찾은 질문을 제목으로 써 봐요.",
+    crit:[["intro","책 소개","어떤 책인지, 줄거리나 내용을 짧게 소개했나"],["impressive","인상 깊은 부분","인상 깊은 장면·문장과 그 까닭을 썼나"],["thoughts","나의 생각·느낌","자기 생각이나 느낌, 자기 경험과의 연결이 있나"],["recommend","평가와 추천","책에 대한 평가, 누구에게 왜 추천하는지 썼나"]] },
+  reading: { label:"독서감상문", ic:"📚", desc:"책을 읽고 느낀 점을 쓰는 글", book:true,
+    tip:"책 제목을 그대로 쓰기보다, 책을 읽고 내 마음에 남은 것을 제목으로 써 봐요.",
+    crit:[["motive","읽게 된 까닭","책을 읽게 된 까닭이나 처음 느낌을 썼나"],["content","책의 내용","줄거리나 중요한 내용을 간추려 썼나"],["feeling","인상 깊은 장면과 느낌","인상 깊은 장면과 그때의 생각·느낌을 함께 썼나"],["lesson","깨달은 점","책을 읽고 깨달은 점, 나에게 생긴 변화나 다짐을 썼나"]] },
+  life:    { label:"생활문", ic:"🌈", desc:"내가 겪은 일과 그때의 마음을 쓰는 글", book:false, topic:"어떤 일에 대한 글인가요?", topicPh:"예: 동생과 처음 자전거를 탄 날",
+    tip:"그 일에서 가장 기억에 남는 순간이나 한마디를 제목으로 써 봐요.",
+    crit:[["event","겪은 일","언제, 어디서, 누구와 무슨 일이 있었는지 알 수 있나"],["detail","생생한 장면","보고, 듣고, 말하고, 한 일을 자세히 썼나"],["feeling","그때의 마음","그때의 마음이나 생각이 드러나나"],["meaning","깨달은 점","그 일로 깨달은 점이나 지금의 생각을 썼나"]] },
+  opinion: { label:"주장하는 글", ic:"📢", desc:"내 의견을 까닭과 함께 밝히는 글", book:false, topic:"무엇에 대한 주장인가요?", topicPh:"예: 학교에서 휴대 전화 사용",
+    tip:"내 주장이 한눈에 보이도록 제목을 써 봐요.",
+    crit:[["issue","문제 상황","어떤 문제에 대한 글인지 처음에 밝혔나"],["claim","나의 주장","내 주장이 분명하게 드러나나"],["reason","근거","주장을 뒷받침하는 까닭이 두 가지 이상 있고, 알맞은가"],["conclusion","마무리","끝에서 주장을 다시 강조하거나 실천을 권했나"]] },
+  explain: { label:"설명하는 글", ic:"🔍", desc:"어떤 대상을 알기 쉽게 알려 주는 글", book:false, topic:"무엇을 설명하나요?", topicPh:"예: 우리 학교 도서관 이용 방법",
+    tip:"무엇을 설명하는 글인지 바로 알 수 있게 제목을 써 봐요.",
+    crit:[["subject","대상 소개","무엇을 설명하는지 처음에 소개했나"],["info","정확한 내용","내용이 정확하고 읽는 사람이 궁금할 점을 담았나"],["structure","짜임","처음-가운데-끝으로 나누어 차례대로 설명했나"],["example","예시·비교","예를 들거나 비교해서 이해하기 쉽게 했나"]] },
+  letter:  { label:"편지", ic:"✉️", desc:"마음을 전하고 싶은 사람에게 쓰는 글", book:false, topic:"누구에게 쓰나요?", topicPh:"예: 할머니께",
+    tip:"편지는 제목 대신 받는 사람을 써도 좋아요. 예: 사랑하는 할머니께",
+    crit:[["greeting","받는 사람과 첫인사","받는 사람을 부르고 첫인사를 했나"],["purpose","쓰는 까닭","왜 편지를 쓰는지 알 수 있나"],["body","전하고 싶은 이야기","전하고 싶은 마음과 이야기를 자세히 썼나"],["closing","끝인사","끝인사, 날짜, 쓴 사람을 썼나"]] },
+  free:    { label:"자유 글", ic:"✏️", desc:"정해진 틀 없이 자유롭게 쓰는 글", book:false, topic:"무엇에 대한 글인가요?", topicPh:"예: 내가 좋아하는 계절",
+    tip:"글에서 가장 하고 싶은 말을 짧게 담아 제목을 써 봐요.",
+    crit:[["content","내용","하고 싶은 말이 분명하고 내용이 알찬가"],["structure","짜임","처음-가운데-끝이 자연스럽게 이어지나"],["expression","표현","생생한 표현이나 꾸며 주는 말을 썼나"],["voice","나만의 생각","나만의 생각이나 느낌이 드러나나"]] },
+};
+const gOf = d => GENRES[(d && d.genre) || "review"] || GENRES.review;
+const areaLabel = (d, k) => k === "flow" ? "글의 흐름" : ((gOf(d).crit.find(c => c[0] === k) || [])[1] || "생각해 보기");
+function aboutLine(d){ const g = gOf(d); if (g.book) { const b = d.book || {}; return `『${b.title||""}』${b.author ? " · " + b.author : ""}${b.publisher ? " · " + b.publisher : ""}`; } return d.topic || ""; }
+const MAX_COACH = 5;
+
+/* ---------- server ---------- */
+const API_URL = "https://qtytrchsjvwknioidqnn.supabase.co/functions/v1/writer-api";
+const sample = true, db = true, aiImages = true;
+async function api(action, payload = {}, timeoutMs = 90000){
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), timeoutMs);
+  let r;
+  try { r = await fetch(API_URL, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ action, ...payload }), signal: ctl.signal }); }
+  catch (e) { throw { code: e && e.name === "AbortError" ? "timeout" : "network" }; }
+  finally { clearTimeout(t); }
+  let j = null; try { j = await r.json(); } catch {}
+  if (!r.ok) throw { code: (j && j.code) || "server", message: j && j.message };
+  return j;
+}
+function aiErr(e){
+  const c = e && e.code;
+  if (c === "daily_limit") return "오늘 쓸 수 있는 AI 도움을 모두 썼어요. 선생님께 알려 주세요.";
+  if (c === "rate_limited") return "AI 선생님이 잠깐 쉬어야 해요. 1~2분 뒤에 다시 눌러 주세요.";
+  if (c === "no_ai") return "AI 도우미가 아직 준비되지 않았어요. 선생님께 알려 주세요.";
+  if (c === "spell_failed") return "맞춤법 검사기에 연결하지 못했어요. 잠시 뒤 다시 해 보거나, 건너뛰고 스스로 점검해요.";
+  if (c === "too_big") return "사진이 너무 커요. 사진 수를 줄여서 다시 해 볼까요?";
+  if (c === "network" || c === "timeout") return "인터넷 연결이 불안정해요. 잠시 뒤 다시 해 볼까요?";
+  return "잘 되지 않았어요. 잠시 뒤 다시 해 볼까요?";
+}
+function blobToB64(b){ return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(",")[1]); fr.onerror = rej; fr.readAsDataURL(b); }); }
+function aboutFor(d){ return aboutLine(d); }
+
+/* ---------- state ---------- */
+const S = { me:null, id:null, d:null, step:1, photos:[], ocrDone:false, tab:"type", self:{} };
+function blankDoc(){
+  return { grade:S.me.grade, cls:S.me.cls, num:S.me.num, name:S.me.name,
+    genre:"", book:{title:"",author:"",publisher:""}, topic:"", draftSource:"", draftRaw:"", spellText:"", spellFixes:[],
+    workText:"", coach:[], finalTitle:"", finalText:"", stars:0, recommendTo:"", finalFixes:0,
+    status:"book", maxStep:1, createdAt:Date.now(), updatedAt:Date.now() };
+}
+let writeChain = Promise.resolve();
+function save(patch = {}){
+  Object.assign(S.d, patch);
+  S.d.updatedAt = Date.now();
+  try { localStorage.setItem("writing-current", JSON.stringify({id:S.id, d:S.d})); } catch {}
+  const body = JSON.parse(JSON.stringify(S.d)); const id = S.id;
+  setSave("저장 중…");
+  writeChain = writeChain.then(() => api("save", { id, doc: body }, 30000)).then(() => { setSave("저장됨 ✓"); return true; },
+    e => { setSave(e && e.code === "not_yours" ? "다른 친구의 글이라 저장할 수 없어요" : "저장하지 못했어요. 인터넷을 확인해 주세요", true); return false; });
+  const ret = writeChain;
+  return ret;
+}
+function setSave(t, err){ const el = $("#saveState"); if (el){ el.textContent = t; el.classList.toggle("err", !!err); } }
+function showWho(){
+  $("#who").innerHTML = S.me ? `${esc(S.me.grade)}학년 ${esc(S.me.cls)}반 ${esc(S.me.num)}번 <b>${esc(S.me.name)}</b><br><span id="saveState" class="savestate"></span>` : "";
+}
+
+/* ---------- screens ---------- */
+function show(id){ ["home","student","teacher"].forEach(s => $("#"+s).classList.toggle("hidden", s !== id)); window.scrollTo(0,0); }
+document.addEventListener("click", e => {
+  const a = e.target.closest("[data-act]"); if (a && a.dataset.act === "home") goHome();
+  const g = e.target.closest("[data-go]"); if (g) goStep(+g.dataset.go);
+});
+function goHome(){
+  S.me = null; S.id = null; S.d = null; S.photos = []; S.ocrDone = false; S.spell = null; S.self = {};
+  stopTeacher(); showWho(); $("#resumeBox").classList.add("hidden"); $("#resumeList").innerHTML = ""; $("#homeMsg").classList.add("hidden");
+  $("#sNum").value = ""; $("#sName").value = "";
+  try { localStorage.removeItem("writing-current"); } catch {}
+  show("home");
+}
+
+/* ---------- home ---------- */
+$("#btnStart").addEventListener("click", async () => {
+  const grade = $("#sGrade").value, cls = $("#sClass").value.trim(), num = $("#sNum").value.trim(), name = $("#sName").value.trim();
+  const msg = $("#homeMsg");
+  if (!grade || !cls || !num || !name) { msg.textContent = "학년, 반, 번호, 이름을 모두 적어 주세요."; msg.classList.remove("hidden"); return; }
+  msg.classList.add("hidden");
+  S.me = { grade:+grade, cls:+cls, num:+num, name };
+  const list = await findMine();
+  if (list.length) {
+    $("#resumeList").innerHTML = list.map(d => `<div class="resume-item"><b>${gOf(d.data()).ic} ${esc(gOf(d.data()).label)} · ${esc(aboutLine(d.data()) || d.data().finalTitle || "(제목 없음)")}</b><span class="badge b-${esc(d.data().status)}">${esc(STATUS_LABEL[d.data().status]||"")}</span><button class="btn small" data-resume="${esc(d.id)}">이어 쓰기</button></div>`).join("");
+    $("#resumeBox").classList.remove("hidden");
+    $$("#resumeList [data-resume]").forEach(b => b.addEventListener("click", () => { const doc = list.find(x => x.id === b.dataset.resume); openDoc(doc.id, JSON.parse(JSON.stringify(doc.data()))); }));
+  } else startNew();
+});
+$("#btnNew").addEventListener("click", startNew);
+async function findMine(){
+  try {
+    const r = await api("find", S.me, 15000);
+    return (r.items || []).map(x => ({ id: x.id, data: () => x.data }));
+  } catch { return []; }
+}
+function newId(){ return "w" + Date.now().toString(36) + Math.random().toString(36).slice(2,9); }
+function startNew(){ openDoc(newId(), null); }
+function openDoc(id, data){
+  S.id = id; S.d = data || blankDoc(); S.photos = []; S.ocrDone = false;
+  showWho(); show("student");
+  fillFromDoc();
+  const st = S.d.status === "submitted" ? 6 : Math.min(S.d.maxStep || 1, 5);
+  goStep(st, true);
+}
+function fillFromDoc(){
+  const d = S.d;
+  if (!d.genre && d.book && d.book.title) d.genre = "review";
+  renderGenres(); $("#bTopic").value = d.topic || "";
+  $("#bTitle").value = d.book.title || ""; $("#bAuthor").value = d.book.author || ""; $("#bPub").value = d.book.publisher || "";
+  $("#typeEditor").value = d.draftSource === "typed" ? d.draftRaw : "";
+  $("#thumbs").innerHTML = ""; $("#ocrResult").classList.add("hidden"); $("#photoPick").classList.remove("hidden"); $("#btnOcr").disabled = true;
+  if (d.draftSource === "photo" && d.draftRaw) { renderOcr(d.draftRaw, true); $("#ocrResult").classList.remove("hidden"); $("#photoPick").classList.add("hidden"); S.ocrDone = true; $("#photoView").innerHTML = '<p class="muted">사진은 저장되지 않아요. 종이 원고를 옆에 두고 비교해 주세요.</p>'; }
+  $("#typeEditor").value = d.draftRaw || "";
+  setTab("type");
+  $("#workEditor").value = d.workText || d.spellText || "";
+  $("#finalEditor").value = d.finalText || d.workText || "";
+  $("#fTitle").value = d.finalTitle || ""; $("#fRec").value = d.recommendTo || "";
+  renderStars(); renderCoach(); updateCounts();
+  $("#spellMain").innerHTML = ""; $("#finalSpell").classList.add("hidden"); $("#finalSpell").innerHTML = "";
+}
+
+/* ---------- stepper ---------- */
+function renderSteps(){
+  const max = S.d.status === "submitted" ? 6 : (S.d.maxStep || 1);
+  $("#steps").innerHTML = STEP_NAMES.map((n,i) => {
+    const k = i+1; const cls = k === S.step ? "now" : (k < max || (S.d.status === "submitted")) ? "done" : (k <= max ? "" : "lock");
+    return `<div class="step ${cls}" data-s="${k}"><b>${k}</b>${n}</div>`;
+  }).join("");
+  $$("#steps .step").forEach(el => el.addEventListener("click", () => { const k = +el.dataset.s; if (!el.classList.contains("lock")) goStep(k); }));
+}
+function goStep(k, silent){
+  if (!S.d) return;
+  const max = S.d.status === "submitted" ? 6 : (S.d.maxStep || 1);
+  if (k > max && k !== 6) return;
+  S.step = k;
+  $$("#student .panel").forEach(p => p.classList.toggle("hidden", +p.dataset.step !== k));
+  renderSteps();
+  if (k === 3) enterSpell();
+  if (k === 4) enterRevise();
+  if (k === 5) { if (!$("#finalEditor").value.trim()) $("#finalEditor").value = S.d.workText || ""; renderPreview(); updateCounts(); }
+  if (k === 6) renderGrowth();
+  if (!silent) window.scrollTo({top:0, behavior:"smooth"});
+}
+function advance(k, patch){ const status = ["","book","draft","spell","revise","final"][k] || S.d.status; save({ ...patch, maxStep: Math.max(S.d.maxStep||1, k), status: S.d.status === "submitted" ? "submitted" : status }); goStep(k); }
+
+/* ---------- step 1 ---------- */
+function renderGenres(){
+  const cur = S.d && S.d.genre;
+  $("#genres").innerHTML = Object.entries(GENRES).map(([k,g]) => `<button class="genre ${k===cur?"on":""}" data-g="${k}"><span class="ic">${g.ic}</span><b>${g.label}</b><span>${g.desc}</span></button>`).join("");
+  $$("#genres [data-g]").forEach(b => b.addEventListener("click", () => { S.d.genre = b.dataset.g; $("#step1Msg").classList.add("hidden"); renderGenres(); }));
+  const g = cur ? GENRES[cur] : null;
+  $("#bookFields").classList.toggle("hidden", !(g && g.book));
+  $("#topicFields").classList.toggle("hidden", !(g && !g.book));
+  if (g && !g.book) { $("#topicLabel").textContent = g.topic + " *"; $("#bTopic").placeholder = g.topicPh || ""; }
+  $$(".recOnly").forEach(el => el.classList.toggle("hidden", cur !== "review"));
+  $("#titleTip").textContent = g ? "💡 제목 짓기 팁: " + g.tip : "";
+}
+$("#btnStep1").addEventListener("click", () => {
+  const m = $("#step1Msg");
+  if (!S.d.genre) { m.textContent = "어떤 글을 썼는지 먼저 골라 주세요."; m.classList.remove("hidden"); return; }
+  const g = gOf(S.d);
+  if (g.book) {
+    const t = $("#bTitle").value.trim();
+    if (!t) { $("#bTitle").focus(); $("#bTitle").style.borderColor = "var(--red)"; return; }
+    $("#bTitle").style.borderColor = "";
+    S.d.book = { title:t, author:$("#bAuthor").value.trim(), publisher:$("#bPub").value.trim() };
+    S.d.topic = "";
+  } else {
+    const tp = $("#bTopic").value.trim();
+    if (!tp) { $("#bTopic").focus(); $("#bTopic").style.borderColor = "var(--red)"; m.textContent = g.topic.replace(/\?$/, "") + "? 꼭 적어 주세요."; m.classList.remove("hidden"); return; }
+    $("#bTopic").style.borderColor = ""; m.classList.add("hidden");
+    S.d.book = { title:"", author:"", publisher:"" }; S.d.topic = tp;
+  }
+  advance(2, {});
+});
+
+/* ---------- step 2 : photo / type ---------- */
+$$(".tab").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+function setTab(t){ S.tab = t; $$(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab === t)); $("#tabPhoto").classList.toggle("hidden", t !== "photo"); $("#tabType").classList.toggle("hidden", t !== "type"); $("#step2Confirm").classList.add("hidden"); }
+const drop = $("#drop");
+["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", e => addFiles(e.dataTransfer.files));
+$("#fileIn").addEventListener("change", e => { addFiles(e.target.files); e.target.value = ""; });
+async function addFiles(files){
+  for (const f of [...files]) {
+    if (!f.type.startsWith("image/") && !/\.(heic|heif)$/i.test(f.name)) continue;
+    if (S.photos.length >= 4) break;
+    try { const blob = await shrink(f); S.photos.push({ blob, url: URL.createObjectURL(blob) }); }
+    catch { showOcrMsg("이 사진은 열 수 없어요. 다른 사진(JPG, PNG)으로 해 볼까요?"); }
+  }
+  renderThumbs();
+}
+function shrink(file){
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file); const img = new Image();
+    img.onload = () => {
+      const max = 1600; let { naturalWidth:w, naturalHeight:h } = img;
+      const sc = Math.min(1, max / Math.max(w,h)); w = Math.round(w*sc); h = Math.round(h*sc);
+      const c = document.createElement("canvas"); c.width = w; c.height = h;
+      c.getContext("2d").drawImage(img, 0, 0, w, h); URL.revokeObjectURL(url);
+      c.toBlob(b => b ? res(b) : rej(), "image/jpeg", 0.82);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(); };
+    img.src = url;
+  });
+}
+function renderThumbs(){
+  $("#thumbs").innerHTML = S.photos.map((p,i) => `<div class="thumb"><img src="${p.url}" data-z="${i}" alt="원고 ${i+1}"><span class="n">${i+1}쪽</span><button data-rm="${i}" aria-label="빼기">×</button></div>`).join("");
+  $$("#thumbs [data-rm]").forEach(b => b.addEventListener("click", () => { S.photos.splice(+b.dataset.rm,1); renderThumbs(); }));
+  $$("#thumbs [data-z]").forEach(im => im.addEventListener("click", () => zoom(im.src)));
+  updateAiButtons();
+}
+function zoom(src){ const z = document.createElement("div"); z.className = "zoom"; z.innerHTML = `<img src="${src}" alt="">`; z.addEventListener("click", () => z.remove()); document.body.appendChild(z); }
+function updateAiButtons(){
+  $("#btnOcr").disabled = !(sample && aiImages && S.photos.length);
+  $("#btnCoach").disabled = !sample || (S.d && (S.d.coach||[]).length >= MAX_COACH);
+  $("#btnFinalSpell").classList.toggle("hidden", !sample);
+}
+function showOcrMsg(t){ const m = $("#ocrMsg"); m.textContent = t; m.classList.toggle("hidden", !t); }
+
+$("#btnOcr").addEventListener("click", async () => {
+  showOcrMsg(""); $("#ocrLoading").classList.remove("hidden"); $("#btnOcr").disabled = true;
+  try {
+    const images = await Promise.all(S.photos.map(p => blobToB64(p.blob)));
+    const r = await api("ocr", { images, genre: S.d.genre, about: aboutLine(S.d) }, 150000);
+    if (!r.readable || !String(r.text||"").trim()) { showOcrMsg(r.note || "사진에서 글을 읽지 못했어요. 더 밝고 반듯하게 다시 찍어 볼까요?"); return; }
+    renderOcr(String(r.text).replace(/\r\n/g,"\n"));
+    $("#photoView").innerHTML = S.photos.map((p,i) => `<img src="${p.url}" alt="원고 ${i+1}쪽">`).join("");
+    $("#photoPick").classList.add("hidden"); $("#ocrResult").classList.remove("hidden"); S.ocrDone = true;
+    if (r.note) showOcrMsg(r.note);
+  } catch (e) { showOcrMsg(aiErr(e)); }
+  finally { $("#ocrLoading").classList.add("hidden"); updateAiButtons(); }
+});
+$("#btnOcrRetry").addEventListener("click", () => { $("#ocrResult").classList.add("hidden"); $("#photoPick").classList.remove("hidden"); S.ocrDone = false; showOcrMsg(""); });
+
+const ocrEd = $("#ocrEditor");
+if (ocrEd.contentEditable !== "plaintext-only") ocrEd.setAttribute("contenteditable","true");
+function renderOcr(text, allChecked){
+  ocrEd.innerHTML = "";
+  text.split(/(\[\[[\s\S]*?\]\])/).forEach(p => {
+    if (!p) return;
+    if (p.startsWith("[[") && p.endsWith("]]")) { const m = document.createElement("mark"); m.className = "unsure" + (allChecked ? " checked" : ""); m.textContent = p.slice(2,-2); ocrEd.appendChild(m); }
+    else ocrEd.appendChild(document.createTextNode(p));
+  });
+  updateUnsure(); updateCounts();
+}
+ocrEd.addEventListener("click", e => { const m = e.target.closest("mark.unsure"); if (m) { m.classList.add("checked"); updateUnsure(); } });
+ocrEd.addEventListener("input", () => {
+  const sel = window.getSelection(); let n = sel && sel.anchorNode;
+  while (n && n !== ocrEd) { if (n.nodeName === "MARK") { n.classList.add("checked"); break; } n = n.parentNode; }
+  $$("mark", ocrEd).forEach(m => { if (!m.textContent) m.remove(); });
+  updateUnsure(); updateCounts();
+});
+ocrEd.addEventListener("paste", e => { e.preventDefault(); const t = (e.clipboardData || window.clipboardData).getData("text/plain"); document.execCommand("insertText", false, t); });
+function updateUnsure(){
+  const left = $$("mark.unsure:not(.checked)", ocrEd).length;
+  $("#unsureCount").textContent = left ? `확인할 곳 ${left}군데 남았어요` : "모두 확인했어요 👍";
+}
+function ocrText(){ return ocrEd.innerText.replace(/ /g," ").replace(/\n{3,}/g,"\n\n").trim(); }
+
+$("#btnStep2").addEventListener("click", () => {
+  const box = $("#step2Confirm");
+  let text = "", src = S.tab;
+  if (src === "photo") {
+    if (!S.ocrDone) { box.textContent = "먼저 사진을 올리고 '글자로 바꾸기'를 눌러 주세요. 또는 '직접 입력하기'를 골라요."; box.classList.remove("hidden"); return; }
+    const left = $$("mark.unsure:not(.checked)", ocrEd).length;
+    if (left && !box.dataset.ok) { box.innerHTML = `아직 확인하지 않은 노란색이 <b>${left}군데</b> 있어요. 종이와 비교해 봤나요? 다 봤다면 버튼을 한 번 더 눌러 주세요.`; box.classList.remove("hidden"); box.dataset.ok = "1"; return; }
+    text = ocrText();
+  } else text = $("#typeEditor").value.trim();
+  delete box.dataset.ok; box.classList.add("hidden");
+  if (text.length < 20) { box.textContent = "초고가 너무 짧아요. 종이에 쓴 글을 모두 옮겨 주세요."; box.classList.remove("hidden"); return; }
+  const changed = text !== S.d.draftRaw;
+  const patch = { draftRaw:text, draftSource: src === "photo" ? "photo" : "typed" };
+  if (changed) { patch.spellText = ""; patch.spellFixes = []; S.spell = null; if (!S.d.coach.length) patch.workText = ""; }
+  advance(3, patch);
+});
+
+/* ---------- spelling (shared) ---------- */
+const SPELL_URL = "https://qtytrchsjvwknioidqnn.supabase.co/functions/v1/spell-check";
+function chunkText(t, max){
+  const out = []; let rest = t;
+  while (rest.length > max) {
+    const win = rest.slice(0, max);
+    let cut = win.lastIndexOf("\n");
+    if (cut < max * 0.3) { const m = [...win.matchAll(/[.!?…]["'”’)]?\s/g)].pop(); if (m) cut = m.index + m[0].length - 1; }
+    if (cut < max * 0.3) cut = win.lastIndexOf(" ");
+    if (cut < 1) cut = max - 1;
+    out.push(rest.slice(0, cut + 1)); rest = rest.slice(cut + 1);
+  }
+  if (rest) out.push(rest);
+  return out;
+}
+function cleanWhy(h){
+  const div = document.createElement("div"); div.innerHTML = String(h || "").replace(/<br\s*\/?>/gi, " ");
+  let t = (div.textContent || "").replace(/\s+/g, " ").trim();
+  if (t.length > 180) t = t.slice(0, 178) + "…";
+  return t || "맞춤법과 띄어쓰기를 확인해 보세요.";
+}
+async function spellPart(part){
+  const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 30000);
+  try {
+    const r = await fetch(SPELL_URL, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ text: part }), signal: ctl.signal });
+    const j = await r.json().catch(() => null);
+    if (!r.ok || !j) throw { code:"spell_failed" };
+    return Array.isArray(j.issues) ? j.issues : [];
+  } catch (e) { throw (e && e.code) ? e : { code:"spell_failed" }; }
+  finally { clearTimeout(tm); }
+}
+async function runSpell(text){
+  const segs = [];
+  for (const part of chunkText(text, 550)) {
+    if (!part.trim()) { segs.push({ t:part }); continue; }
+    const issues = await spellPart(part);
+    // 검사기는 같은 실수를 한 번만 알려 주므로, 같은 낱말이 나오는 곳을 모두 찾아 고쳐요
+    const hits = [];
+    for (const is of issues) {
+      const b = String(is.original || ""), a = String(is.suggestion || "");
+      if (!b || !a || a === b) continue;
+      let from = 0, idx;
+      while ((idx = part.indexOf(b, from)) >= 0) { hits.push({ idx, b, a, why: cleanWhy(is.reason) }); from = idx + b.length; }
+    }
+    hits.sort((x, y) => x.idx - y.idx || y.b.length - x.b.length);
+    let cur = 0;
+    for (const h of hits) {
+      if (h.idx < cur) continue;
+      if (h.idx > cur) segs.push({ t: part.slice(cur, h.idx) });
+      segs.push({ b:h.b, a:h.a, why:h.why, on:true }); cur = h.idx + h.b.length;
+    }
+    if (cur < part.length) segs.push({ t: part.slice(cur) });
+  }
+  const merged = [];
+  for (const sg of segs) { const last = merged[merged.length-1]; if (sg.t !== undefined && last && last.t !== undefined) last.t += sg.t; else merged.push(sg); }
+  return { segs: merged, exact: merged.map(x => x.t ?? x.b).join("") === text, original:text };
+}
+function spellResultText(st){ if (!st.exact) return st.segs.map(s => s.t ?? s.a).join("") || st.original; return st.segs.map(s => s.t ?? (s.on ? s.a : s.b)).join(""); }
+function renderSpellUI(box, st, onToggle){
+  const fixes = st.segs.filter(s => s.t === undefined);
+  if (!fixes.length) { box.innerHTML = `<div class="note good">👏 고칠 곳을 찾지 못했어요. 맞춤법이 아주 정확해요!</div><div class="spell-text" style="margin-top:12px">${esc(st.original)}</div>`; return; }
+  let n = 0;
+  const html = st.segs.map((s,i) => {
+    if (s.t !== undefined) return esc(s.t);
+    n++;
+    return st.exact ? `<span class="fix ${s.on?"on":"off"}" data-i="${i}" title="${esc(s.why)}">${s.on ? `<del>${esc(s.b)}</del><ins>${esc(s.a)}</ins>` : esc(s.b)}<sup>${n}</sup></span>`
+                    : `<span class="fix on" title="${esc(s.why)}"><ins>${esc(s.a)}</ins><sup>${n}</sup></span>`;
+  }).join("");
+  n = 0;
+  const list = st.segs.map((s,i) => {
+    if (s.t !== undefined) return "";
+    n++;
+    return `<li><span class="num">${n}</span><div class="body"><div class="pair"><del>${esc(s.b)}</del> → <ins>${esc(s.a)}</ins></div><div class="why">${esc(s.why)}</div></div>${st.exact ? `<button class="toggle ${s.on?"on":""}" data-i="${i}">${s.on?"고침":"원래대로"}</button>` : ""}</li>`;
+  }).join("");
+  box.innerHTML = `<div class="row between"><div class="legend"><span><i class="sw" style="background:var(--leaf-l)"></i><del style="color:var(--red)">원래 글자</del> → <b style="color:var(--leaf)">고친 글자</b></span></div><b class="jua" style="color:var(--peach-d)">고친 곳 ${fixes.length}군데</b></div>
+    ${st.exact ? "" : '<div class="note warn" style="margin-bottom:8px">이번에는 고친 곳을 하나씩 되돌릴 수 없어요. 아래 이유를 꼭 읽어 보세요.</div>'}
+    <div class="spell-text">${html}</div><ul class="fixlist">${list}</ul>`;
+  $$("[data-i]", box).forEach(el => el.addEventListener("click", () => { const s = st.segs[+el.dataset.i]; s.on = !s.on; renderSpellUI(box, st, onToggle); onToggle && onToggle(); }));
+}
+function spellLoading(box, msg){ box.innerHTML = `<div class="loading"><div class="spin"></div><div>${esc(msg)}</div></div>`; }
+
+function enterSpell(){
+  const box = $("#spellMain");
+  if (S.spell && S.spell.original === S.d.draftRaw) { renderSpellUI(box, S.spell); return; }
+  if (S.d.spellText && S.d.spellFixes) { // restored
+    S.spell = restoreSpell(S.d.draftRaw, S.d.spellFixes);
+    if (S.spell) { renderSpellUI(box, S.spell); return; }
+  }
+  if (!sample) { box.innerHTML = `<div class="note warn">AI 도우미를 쓸 수 없어서 맞춤법 검사를 건너뛰어요. 국어사전을 찾아보며 스스로 점검해 봐요.</div><div class="spell-text" style="margin-top:12px">${esc(S.d.draftRaw)}</div>`; S.spell = { segs:[{t:S.d.draftRaw}], exact:true, original:S.d.draftRaw }; return; }
+  doSpell();
+}
+function restoreSpell(original, fixes){
+  // rebuild segments from saved fixes (b,a,why,on,pos)
+  if (!fixes.length) return { segs:[{t:original}], exact:true, original };
+  const segs = []; let cur = 0;
+  for (const f of fixes) {
+    if (typeof f.pos !== "number" || original.substr(f.pos, f.b.length) !== f.b || f.pos < cur) return null;
+    if (f.pos > cur) segs.push({ t: original.slice(cur, f.pos) });
+    segs.push({ b:f.b, a:f.a, why:f.why, on:f.on !== false }); cur = f.pos + f.b.length;
+  }
+  if (cur < original.length) segs.push({ t: original.slice(cur) });
+  return { segs, exact:true, original };
+}
+function fixesOf(st){ let pos = 0; const out = []; st.segs.forEach(s => { if (s.t !== undefined) pos += s.t.length; else { out.push({ b:s.b, a:s.a, why:s.why, on:s.on, pos: st.exact ? pos : -1 }); pos += s.b.length; } }); return out; }
+async function doSpell(){
+  const box = $("#spellMain");
+  spellLoading(box, "맞춤법 검사기가 살펴보고 있어요…");
+  $("#btnStep3").disabled = true;
+  try { S.spell = await runSpell(S.d.draftRaw); renderSpellUI(box, S.spell); }
+  catch (e) { box.innerHTML = `<div class="note err">${esc(aiErr(e))}</div><div class="row" style="margin-top:10px"><button class="btn sky small" id="btnSpellRetry">다시 검사하기</button><button class="btn ghost small" id="btnSpellSkip">건너뛰기</button></div>`;
+    $("#btnSpellRetry").onclick = doSpell; $("#btnSpellSkip").onclick = () => { S.spell = { segs:[{t:S.d.draftRaw}], exact:true, original:S.d.draftRaw }; renderSpellUI(box, S.spell); };
+  } finally { $("#btnStep3").disabled = false; }
+}
+$("#btnStep3").addEventListener("click", () => {
+  if (!S.spell) return;
+  const text = spellResultText(S.spell);
+  const patch = { spellText:text, spellFixes: fixesOf(S.spell) };
+  if (!S.d.workText || !S.d.coach.length) patch.workText = text;
+  advance(4, patch);
+});
+
+/* ---------- step 4 : self check ---------- */
+const QB = {
+  review: {
+    intro: [["이 책을 안 읽은 친구가 내 글만 읽고 어떤 책인지 알 수 있을까?","누가 나오고, 어떤 일이 벌어지는지 한두 문장으로 말해 봐."],["결말까지 다 말해 버리지는 않았니?","읽을 친구를 위해 궁금증을 남겨 둘 부분을 골라 봐."]],
+    impressive: [["가장 기억에 남는 장면이나 문장이 글에 들어가 있니?","책을 덮고 나서도 떠오르는 장면을 생각해 봐."],["그 장면이 왜 인상 깊었는지 까닭을 썼니?","그 장면을 읽을 때 내 마음이 어땠는지 떠올려 봐."]],
+    thoughts: [["이 책을 읽고 내 생각이 어떻게 달라졌어?","읽기 전과 읽은 뒤의 나를 비교해 봐."],["책 속 이야기와 비슷한 일을 겪은 적이 있니?","가족, 친구, 학교에서 있었던 일을 떠올려 봐."]],
+    recommend: [["이 책을 어떤 친구에게 권하고 싶어? 그 까닭은?","이 책이 꼭 필요한 친구는 어떤 고민을 가진 친구일까?"],["이 책의 좋은 점과 아쉬운 점을 모두 생각해 봤니?","별점을 준다면 몇 개인지, 왜 그런지 생각해 봐."]] },
+  reading: {
+    motive: [["이 책을 어떻게 읽게 되었는지 썼니?","누가 추천했는지, 표지나 제목에 끌렸는지 떠올려 봐."],["책을 처음 펼쳤을 때 어떤 느낌이 들었어?","제목을 보고 어떤 이야기일 거라고 생각했는지 떠올려 봐."]],
+    content: [["책의 줄거리를 차례대로 간추려 썼니?","중요한 사건 세 가지만 골라 봐."],["줄거리가 내 느낌보다 훨씬 길지는 않니?","줄거리는 짧게, 내 생각은 길게 써 볼까?"]],
+    feeling: [["가장 인상 깊은 장면에서 어떤 마음이 들었어?","기뻤는지, 슬펐는지, 화가 났는지 마음을 나타내는 말을 찾아봐."],["내가 주인공이라면 그 장면에서 어떻게 했을까?","주인공의 자리에 나를 넣어 생각해 봐."]],
+    lesson: [["이 책을 읽고 새롭게 깨달은 점은 뭐야?","책이 나에게 하고 싶었던 말이 무엇일지 생각해 봐."],["앞으로 해 보고 싶은 일이나 다짐이 생겼니?","작은 것이라도 오늘부터 해 볼 수 있는 일을 떠올려 봐."]] },
+  life: {
+    event: [["언제, 어디서, 누구와 있었던 일인지 글에 다 들어 있니?","누가·언제·어디서·무엇을·어떻게·왜를 하나씩 확인해 봐."],["일이 일어난 차례대로 썼니?","처음에 무슨 일이 있었고, 그다음에는 어떻게 됐는지 순서를 떠올려 봐."]],
+    detail: [["그때 들었던 소리나 누군가 한 말을 넣어 보면 어떨까?","큰따옴표(“ ”)로 실제로 했던 말을 옮겨 볼 수 있어."],["그 장면이 눈앞에 그려지도록 자세히 썼니?","보이는 것, 들리는 것, 냄새, 느낌 중 하나를 더해 봐."]],
+    feeling: [["그때 내 마음을 나타내는 말을 썼니?","'좋았다' 대신 더 꼭 맞는 마음 낱말을 찾아봐."],["마음이 바뀐 순간이 있었니?","처음 마음과 나중 마음을 비교해 봐."]],
+    meaning: [["이 일을 겪고 나서 깨달은 점이 있니?","이 일이 나에게 어떤 의미인지 생각해 봐."],["지금 다시 그 일을 떠올리면 어떤 생각이 들어?","그때의 나에게 한마디 해 준다면 뭐라고 할까?"]] },
+  opinion: {
+    issue: [["글 첫 부분에서 어떤 문제에 대한 글인지 알 수 있니?","읽는 사람이 '아, 이 문제구나' 하고 알 수 있게 상황을 소개해 봐."],["이 문제가 왜 중요한지 썼니?","이 문제 때문에 누가 어떤 어려움을 겪는지 생각해 봐."]],
+    claim: [["내 주장이 한 문장으로 분명하게 드러나니?","'나는 ~해야 한다고 생각한다'처럼 정리해 봐."],["주장이 글 중간에 바뀌지는 않았니?","처음과 끝의 주장을 나란히 놓고 비교해 봐."]],
+    reason: [["주장을 뒷받침하는 까닭이 두 가지 이상 있니?","'첫째', '둘째'로 까닭을 나누어 써 볼 수 있어."],["까닭이 믿을 만하니? 예나 경험이 함께 있니?","직접 겪은 일이나 알고 있는 사실을 예로 들어 봐."]],
+    conclusion: [["글 끝에서 주장을 다시 한번 강조했니?","처음 주장을 다른 말로 바꿔서 다시 정리해 봐."],["읽는 사람에게 함께 해 보자고 권하는 말이 있니?","우리가 실제로 할 수 있는 일을 떠올려 봐."]] },
+  explain: {
+    subject: [["처음 부분에서 무엇을 설명할지 알려 주었니?","읽는 사람의 궁금증을 끌어낼 질문으로 시작해 볼 수도 있어."],["이 대상을 왜 설명하려는지 썼니?","읽는 사람에게 왜 도움이 될지 생각해 봐."]],
+    info: [["설명한 내용이 정확한지 확인했니?","책이나 믿을 만한 자료에서 다시 찾아봐."],["읽는 사람이 더 궁금해할 점이 남아 있지 않니?","친구가 '그게 뭐야?' 하고 물을 만한 곳을 찾아봐."]],
+    structure: [["처음-가운데-끝으로 문단을 나누었니?","문단마다 하나의 내용만 들어 있는지 살펴봐."],["설명하는 순서가 자연스럽니?","시간 순서, 중요한 순서, 큰 것에서 작은 것 순서 중 하나를 골라 봐."]],
+    example: [["이해를 돕는 예를 들었니?","'예를 들어'로 시작하는 문장을 넣을 곳을 찾아봐."],["비슷한 것과 비교하거나 다른 점을 견주어 설명해 봤니?","읽는 사람이 이미 알고 있는 것과 비교해 봐."]] },
+  letter: {
+    greeting: [["받는 사람을 부르는 말과 첫인사를 썼니?","'○○에게', '○○께'로 시작해 안부를 물어봐."],["받는 사람에게 맞는 말투로 썼니?","어른께 쓸 때는 높임말을 썼는지 확인해 봐."]],
+    purpose: [["왜 이 편지를 쓰는지 알 수 있니?","고마움, 미안함, 축하, 부탁 중 어떤 마음인지 생각해 봐."],["편지를 쓰게 된 일이나 계기를 썼니?","언제 이 편지를 쓰고 싶어졌는지 떠올려 봐."]],
+    body: [["전하고 싶은 마음을 구체적인 일과 함께 썼니?","그 마음이 생긴 장면을 하나 떠올려 넣어 봐."],["받는 사람이 읽고 어떤 기분이 들까?","받는 사람의 입장이 되어 다시 읽어 봐."]],
+    closing: [["끝인사를 썼니?","건강이나 다음 만남을 바라는 말로 마무리해 봐."],["날짜와 쓴 사람을 썼니?","편지 맨 끝에 날짜와 '○○ 올림'이나 '○○가'를 써 봐."]] },
+  free: {
+    content: [["이 글에서 가장 하고 싶은 말이 잘 드러나니?","한 문장으로 줄여 말해 봐."],["하고 싶은 말을 뒷받침하는 이야기가 충분하니?","예나 경험을 하나 더 떠올려 봐."]],
+    structure: [["처음-가운데-끝이 자연스럽게 이어지니?","문단의 첫 문장만 이어 읽어 봐."],["문단을 알맞게 나누었니?","내용이 바뀌는 곳에서 줄을 바꿔 봐."]],
+    expression: [["더 생생하게 바꾸고 싶은 낱말이 있니?","흉내 내는 말이나 꾸며 주는 말을 넣어 봐."],["같은 낱말이 너무 자주 나오지 않니?","소리 내어 읽으며 자꾸 나오는 말을 찾아봐."]],
+    voice: [["다른 사람과 다른 나만의 생각이 들어 있니?","'나는 이렇게 생각해'라고 말할 수 있는 부분을 찾아봐."],["내 느낌이 솔직하게 드러나니?","그때 진짜 마음을 떠올려 봐."]] },
+};
+const FLOW_Q = [["글을 소리 내어 처음부터 끝까지 읽어 봤니?","어색하게 들리는 곳에 표시하고 고쳐 봐."],["문장이 너무 길어서 읽기 힘든 곳은 없니?","긴 문장은 두 문장으로 나눠 봐."]];
+const SC_LABEL = ["아직 없어요","조금 있어요","충분해요"];
+function enterRevise(){
+  if (!$("#workEditor").value.trim()) $("#workEditor").value = S.d.workText || S.d.spellText || S.d.draftRaw;
+  $("#origText").textContent = S.d.draftRaw || "";
+  const last = (S.d.coach || []).slice(-1)[0];
+  S.self = last && last.checks ? { ...last.checks } : {};
+  renderCoach(); updateCounts();
+}
+let workTimer = null;
+$("#workEditor").addEventListener("input", () => { updateCounts(); clearTimeout(workTimer); workTimer = setTimeout(() => save({ workText: $("#workEditor").value }), 2500); });
+function renderSelfCheck(){
+  $("#selfCheck").innerHTML = gOf(S.d).crit.map(c => `<div class="sc-item"><b>${esc(c[1])}</b><div class="d">${esc(c[2])}?</div>
+    <div class="sc-btns">${[0,1,2].map(v => `<button data-k="${c[0]}" data-v="${v}" class="${S.self[c[0]] === v ? "on" : ""}">${SC_LABEL[v]}</button>`).join("")}</div></div>`).join("");
+  $$("#selfCheck [data-k]").forEach(b => b.addEventListener("click", () => { S.self[b.dataset.k] = +b.dataset.v; $("#coachMsg").classList.add("hidden"); renderSelfCheck(); }));
+}
+function renderCoach(){
+  if (!S.d) return;
+  renderSelfCheck();
+  const c = S.d.coach || []; const last = c[c.length-1];
+  if (last) {
+    $("#coachBody").innerHTML = (last.done ? `<div class="note good">👏 네 가지가 모두 충분하다고 했어요! 마지막으로 이것만 확인해 봐요.</div>` : "") +
+      (last.questions||[]).map((q,i) => `<div class="qcard"><span class="area">${esc(areaLabel(S.d, q.area))}</span><div class="q">${esc(q.q)}</div>${q.hint ? `<button data-h="${i}">💡 힌트 보기</button><div class="hint hidden" id="hint${i}">${esc(q.hint)}</div>` : ""}</div>`).join("");
+    $$("#coachBody [data-h]").forEach(b => b.addEventListener("click", () => { $("#hint"+b.dataset.h).classList.remove("hidden"); b.remove(); }));
+  } else $("#coachBody").innerHTML = "";
+  $("#btnCoach").textContent = c.length ? "고친 글로 다시 점검하기" : "질문 카드 받기";
+  $("#coachHistory").textContent = c.length ? `지금까지 ${c.length}번 점검했어요.` : "";
+}
+function updateAiButtons(){ $("#btnOcr").disabled = true; $("#btnCoach").disabled = false; $("#btnFinalSpell").classList.remove("hidden"); }
+$("#btnCoach").addEventListener("click", () => {
+  const text = $("#workEditor").value.trim();
+  const msg = $("#coachMsg"); msg.classList.add("hidden");
+  const g = gOf(S.d); const keys = g.crit.map(c => c[0]);
+  if (text.length < 20) { msg.textContent = "글이 너무 짧아요."; msg.classList.remove("hidden"); return; }
+  if (keys.some(k => S.self[k] === undefined)) { msg.textContent = "네 가지를 모두 골라 주세요."; msg.classList.remove("hidden"); return; }
+  const c = S.d.coach || []; const round = c.length;
+  const bank = QB[S.d.genre] || QB.review;
+  const weak = keys.filter(k => S.self[k] < 2).sort((a,b) => S.self[a] - S.self[b]).slice(0,3);
+  const pick = (arr) => arr[round % arr.length];
+  const qs = weak.map(k => { const [q,hint] = pick(bank[k] || FLOW_Q); return { area:k, q, hint }; });
+  const done = !weak.length;
+  if (qs.length < 3) { const [q,hint] = pick(FLOW_Q); qs.push({ area:"flow", q, hint }); }
+  const entry = { at:Date.now(), text, praise:"", checks:{ ...S.self }, questions:qs, done, self:true };
+  S.d.coach = [...c, entry];
+  save({ coach:S.d.coach, workText:text });
+  renderCoach();
+  $("#coachBody").scrollIntoView({ behavior:"smooth", block:"nearest" });
+});
+$("#btnStep4").addEventListener("click", () => {
+  const text = $("#workEditor").value.trim();
+  if (!$("#finalEditor").value.trim() || $("#finalEditor").value.trim() === (S.d.workText||"").trim()) $("#finalEditor").value = text;
+  clearTimeout(workTimer);
+  advance(5, { workText:text });
+});
+
+/* ---------- step 5 : final ---------- */
+function renderStars(){
+  const v = (S.d && S.d.stars) || 0;
+  $("#stars").innerHTML = [1,2,3,4,5].map(i => `<button class="${i<=v?"on":""}" data-st="${i}" aria-label="별 ${i}개">★</button>`).join("");
+  $$("#stars [data-st]").forEach(b => b.addEventListener("click", () => { S.d.stars = +b.dataset.st; renderStars(); renderPreview(); finalSaveSoon(); }));
+}
+let finalTimer = null;
+function finalSaveSoon(){ clearTimeout(finalTimer); finalTimer = setTimeout(() => save(collectFinal()), 2500); }
+function collectFinal(){ const rv = gOf(S.d) === GENRES.review; return { finalTitle:$("#fTitle").value.trim(), finalText:$("#finalEditor").value.trim(), recommendTo: rv ? $("#fRec").value.trim() : "", stars: rv ? (S.d.stars||0) : 0 }; }
+["#fTitle","#fRec","#finalEditor"].forEach(s => $(s).addEventListener("input", () => { renderPreview(); updateCounts(); finalSaveSoon(); }));
+function renderPreview(){
+  if (!S.d) return;
+  const f = collectFinal(), g = gOf(S.d), about = aboutLine(S.d);
+  $("#preview").innerHTML = `<div class="bk">${g.ic} ${esc(g.label)}${about ? " · " + esc(about) : ""}</div>
+    <h3>${esc(f.finalTitle) || '<span class="muted">글 제목을 적어 주세요</span>'}</h3>
+    <div class="muted" style="margin-bottom:10px">${esc(S.d.grade)}학년 ${esc(S.d.cls)}반 ${esc(S.d.name)}</div>
+    <div class="txt">${esc(f.finalText)}</div>
+    ${(f.stars || f.recommendTo) ? `<div class="rec">${f.stars ? `<span style="color:#F5B31B">${"★".repeat(f.stars)}</span><span style="color:#E3D7CF">${"★".repeat(5-f.stars)}</span> ` : ""}${f.recommendTo ? "· " + esc(f.recommendTo) + "에게 추천해요" : ""}</div>` : ""}`;
+}
+$("#btnFinalSpell").addEventListener("click", async () => {
+  const box = $("#finalSpell"); box.classList.remove("hidden");
+  const text = $("#finalEditor").value.trim(); if (!text) return;
+  spellLoading(box, "마지막으로 맞춤법 검사기가 살펴보고 있어요…");
+  try {
+    const st = await runSpell(text);
+    const fixes = st.segs.filter(s => s.t === undefined);
+    const wrap = document.createElement("div"); box.innerHTML = ""; box.appendChild(wrap);
+    renderSpellUI(wrap, st);
+    if (fixes.length) {
+      const bar = document.createElement("div"); bar.className = "row end"; bar.style.marginTop = "10px";
+      bar.innerHTML = `<button class="btn ghost small" data-x="close">닫기</button><button class="btn leaf small" data-x="apply">고친 내용을 본문에 넣기</button>`;
+      box.appendChild(bar);
+      bar.querySelector('[data-x="apply"]').onclick = () => { $("#finalEditor").value = spellResultText(st); S.d.finalFixes = (S.d.finalFixes||0) + st.segs.filter(s => s.t === undefined && (s.on || !st.exact)).length; box.classList.add("hidden"); renderPreview(); updateCounts(); save(collectFinal()); };
+      bar.querySelector('[data-x="close"]').onclick = () => box.classList.add("hidden");
+    }
+  } catch (e) { box.innerHTML = `<div class="note err">${esc(aiErr(e))}</div>`; }
+});
+$("#btnSubmit").addEventListener("click", async () => {
+  const f = collectFinal(), m = $("#step5Msg");
+  if (!f.finalTitle) { m.textContent = "글 제목을 적어 주세요."; m.classList.remove("hidden"); $("#fTitle").focus(); return; }
+  if (f.finalText.length < 30) { m.textContent = "본문이 너무 짧아요."; m.classList.remove("hidden"); return; }
+  m.classList.add("hidden"); clearTimeout(finalTimer);
+  $("#btnSubmit").disabled = true;
+  const prev = S.d.status;
+  const ok = await save({ ...f, status:"submitted", submittedAt:Date.now(), maxStep:5 });
+  $("#btnSubmit").disabled = false;
+  if (!ok) { S.d.status = prev; m.textContent = "제출하지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요."; m.classList.remove("hidden"); return; }
+  goStep(6);
+});
+function renderGrowth(){
+  const d = S.d;
+  const len = s => (s||"").replace(/\s/g,"").length;
+  const spellN = (d.spellFixes||[]).filter(f => f.on !== false).length + (d.finalFixes||0);
+  $("#growth").innerHTML = `<div><b>${len(d.draftRaw)}</b>초고 글자 수</div><div><b>${len(d.finalText)}</b>완성본 글자 수</div><div><b>${spellN}</b>맞춤법 고친 곳</div><div><b>${(d.coach||[]).length}</b>퇴고한 횟수</div>`;
+}
+function updateCounts(){
+  const len = s => (s||"").replace(/\s/g,"").length;
+  $("#ocrCount").textContent = `${len(ocrEd.innerText)}자`;
+  $("#typeCount").textContent = `${len($("#typeEditor").value)}자`;
+  $("#workCount").textContent = `${len($("#workEditor").value)}자 (공백 빼고)`;
+  $("#finalCount").textContent = `${len($("#finalEditor").value)}자`;
+}
+$("#typeEditor").addEventListener("input", updateCounts);
+
+/* ---------- teacher ---------- */
+let tPin = "", tTimer = null, tDocs = [], tSel = new Set();
+$("#btnTeacher").addEventListener("click", () => {
+  show("teacher"); $("#tMain").classList.add("hidden"); $("#tGate").classList.remove("hidden"); $("#tPin").value = ""; $("#tGateMsg").classList.add("hidden");
+  let saved = ""; try { saved = sessionStorage.getItem("writing-tpin") || ""; } catch {}
+  if (saved) { tPin = saved; openTeacher(); return; }
+  setTimeout(() => $("#tPin").focus(), 50);
+});
+function gateMsg(t){ const m = $("#tGateMsg"); m.textContent = t; m.classList.remove("hidden"); }
+$("#tPin").addEventListener("keydown", e => { if (e.key === "Enter") $("#btnPin").click(); });
+$("#btnPin").addEventListener("click", async () => {
+  const p = $("#tPin").value.trim();
+  if (!p) { gateMsg("비밀번호를 적어 주세요."); return; }
+  $("#btnPin").disabled = true;
+  try { await api("t_check", { pin:p }, 20000); tPin = p; try { sessionStorage.setItem("writing-tpin", p); } catch {} openTeacher(); }
+  catch (e) { gateMsg(e.code === "bad_pin" ? "비밀번호가 달라요." : e.code === "no_pin" ? "선생님 비밀번호가 아직 설정되지 않았어요. (Supabase의 TEACHER_PIN)" : "확인하지 못했어요. 인터넷을 확인해 주세요."); }
+  finally { $("#btnPin").disabled = false; }
+});
+$("#btnPinChange").addEventListener("click", () => { if (tPin) loadTeacher(true); });
+function openTeacher(){
+  $("#tGate").classList.add("hidden"); $("#tMain").classList.remove("hidden");
+  loadTeacher(true);
+  clearInterval(tTimer); tTimer = setInterval(() => { if (!document.hidden && !$("#modalRoot").innerHTML) loadTeacher(false); }, 30000);
+}
+async function loadTeacher(showLoading){
+  if (showLoading) $("#tLoading").classList.remove("hidden");
+  try {
+    const r = await api("t_list", { pin:tPin }, 30000);
+    tDocs = r.items || []; $("#tMsg").classList.add("hidden"); renderTeacher();
+  } catch (e) {
+    if (e.code === "bad_pin") { try { sessionStorage.removeItem("writing-tpin"); } catch {} stopTeacher(); $("#tMain").classList.add("hidden"); $("#tGate").classList.remove("hidden"); gateMsg("비밀번호가 바뀌었어요. 다시 입력해 주세요."); }
+    else tMsg("글을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.");
+  } finally { $("#tLoading").classList.add("hidden"); }
+}
+function stopTeacher(){ clearInterval(tTimer); tTimer = null; tSel.clear(); }
+function tMsg(t){ const m = $("#tMsg"); m.textContent = t; m.classList.remove("hidden"); }
+$("#tfGenre").innerHTML = `<option value="">전체</option>` + Object.entries(GENRES).map(([k,g]) => `<option value="${k}">${g.label}</option>`).join("");
+["#tfGrade","#tfClass","#tfStatus","#tfGenre"].forEach(s => $(s).addEventListener("change", renderTeacher));
+$("#tfSearch").addEventListener("input", renderTeacher);
+function filtered(){
+  const g = $("#tfGrade").value, c = $("#tfClass").value, st = $("#tfStatus").value, q = $("#tfSearch").value.trim(), gn = $("#tfGenre").value;
+  return tDocs.filter(d => (!gn || (d.genre || "review") === gn) && (!g || String(d.grade) === g) && (!c || String(d.cls) === c) &&
+    (!st || (st === "submitted" ? d.status === "submitted" : d.status !== "submitted")) &&
+    (!q || (d.name||"").includes(q) || aboutLine(d).includes(q) || (d.finalTitle||"").includes(q)))
+    .sort((a,b) => (a.grade-b.grade) || (a.cls-b.cls) || (a.num-b.num) || ((b.updatedAt||0)-(a.updatedAt||0)));
+}
+function fmtTime(t){ if (!t) return ""; const d = new Date(t); return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; }
+function renderTeacher(){
+  const classes = [...new Set(tDocs.filter(d => !$("#tfGrade").value || String(d.grade) === $("#tfGrade").value).map(d => d.cls))].sort((a,b)=>a-b);
+  const cv = $("#tfClass").value;
+  $("#tfClass").innerHTML = `<option value="">전체</option>` + classes.map(c => `<option ${String(c)===cv?"selected":""}>${esc(c)}</option>`).join("");
+  const rows = filtered();
+  const ids = new Set(tDocs.map(d => d.id)); [...tSel].forEach(id => { if (!ids.has(id)) tSel.delete(id); });
+  $("#tCount").textContent = `${rows.length}편 · 제출 완료 ${rows.filter(d => d.status === "submitted").length}편`;
+  $("#tBody").innerHTML = rows.length ? rows.map(d => `<tr class="click" data-id="${esc(d.id)}">
+      <td><input type="checkbox" data-sel="${esc(d.id)}" ${tSel.has(d.id)?"checked":""} aria-label="선택"></td>
+      <td>${esc(d.grade)}-${esc(d.cls)}-${esc(d.num)}</td><td>${esc(d.name)}</td><td>${gOf(d).ic} ${esc(gOf(d).label)}</td><td>${esc(aboutLine(d))}</td><td>${esc(d.finalTitle)}</td>
+      <td><span class="badge b-${esc(d.status)}">${esc(STATUS_LABEL[d.status]||"")}</span></td><td class="muted">${fmtTime(d.updatedAt)}</td></tr>`).join("")
+    : `<tr><td colspan="8" class="muted" style="text-align:center;padding:24px">아직 글이 없어요.</td></tr>`;
+  $$("#tBody [data-sel]").forEach(cb => { cb.addEventListener("click", e => e.stopPropagation()); cb.addEventListener("change", () => { cb.checked ? tSel.add(cb.dataset.sel) : tSel.delete(cb.dataset.sel); updPrint(); }); });
+  $$("#tBody tr.click").forEach(tr => tr.addEventListener("click", () => openDetail(tr.dataset.id)));
+  $("#tAll").checked = rows.length > 0 && rows.every(d => tSel.has(d.id));
+  updPrint();
+}
+$("#tAll").addEventListener("change", e => { filtered().forEach(d => e.target.checked ? tSel.add(d.id) : tSel.delete(d.id)); renderTeacher(); });
+function updPrint(){ $("#btnPrint").disabled = !tSel.size; $("#btnPrint").textContent = tSel.size ? `선택한 ${tSel.size}편 인쇄하기` : "선택한 글 인쇄하기"; }
+
+function openDetail(id){
+  const d = tDocs.find(x => x.id === id); if (!d) return;
+  const len = s => (s||"").replace(/\s/g,"").length;
+  const fixes = (d.spellFixes||[]).filter(f => f.on !== false);
+  const coach = d.coach || [];
+  const root = $("#modalRoot");
+  root.innerHTML = `<div class="modal-bg"><div class="modal" role="dialog" aria-label="글 자세히 보기">
+    <div class="row between"><div><div class="muted">${esc(d.grade)}학년 ${esc(d.cls)}반 ${esc(d.num)}번 · ${fmtTime(d.updatedAt)} 저장</div><h2 style="margin:0">${esc(d.name)} · ${gOf(d).ic} ${esc(gOf(d).label)}</h2>${aboutLine(d) ? `<div class="muted">${esc(aboutLine(d))}</div>` : ""}</div>
+    <button class="btn ghost small" data-x="close">닫기</button></div>
+    <div class="growth"><div><b>${len(d.draftRaw)}</b>초고 글자 수</div><div><b>${len(d.finalText)}</b>완성본 글자 수</div><div><b>${fixes.length + (d.finalFixes||0)}</b>맞춤법 고친 곳</div><div><b>${coach.length}</b>퇴고 횟수</div></div>
+    <div class="tabs" id="dTabs"><button class="tab on" data-t="final">완성본</button><button class="tab" data-t="draft">초고</button><button class="tab" data-t="spell">맞춤법</button><button class="tab" data-t="coach">퇴고 과정</button></div>
+    <div id="dBody"></div>
+    <div class="row between" style="margin-top:18px"><span id="delWrap"><button class="btn danger small" data-x="del">이 글 지우기</button></span>
+      <button class="btn small" data-x="dl">이 글만 인쇄하기</button></div>
+  </div></div>`;
+  const body = $("#dBody");
+  const tabs = {
+    final: () => d.finalText ? `<h3>${esc(d.finalTitle || "(제목 없음)")}</h3><div class="txt">${esc(d.finalText)}</div>${d.stars ? `<p>추천 별점: <span style="color:#F5B31B">${"★".repeat(d.stars)}</span>${d.recommendTo ? " · " + esc(d.recommendTo) + "에게 추천" : ""}</p>` : ""}` : `<p class="muted">아직 완성본이 없어요. (지금 단계: ${esc(STATUS_LABEL[d.status]||"")})</p>${d.workText ? `<h3>다듬는 중인 글</h3><div class="txt">${esc(d.workText)}</div>` : ""}`,
+    draft: () => d.draftRaw ? `<p class="muted">${d.draftSource === "photo" ? "📷 손글씨 사진을 인식해 학생이 확인한 초고" : "⌨️ 학생이 직접 입력한 초고"}</p><div class="txt">${esc(d.draftRaw)}</div>` : `<p class="muted">아직 초고가 없어요.</p>`,
+    spell: () => fixes.length ? `<ul class="fixlist">${fixes.map((f,i) => `<li><span class="num">${i+1}</span><div class="body"><div class="pair"><del>${esc(f.b)}</del> → <ins>${esc(f.a)}</ins></div><div class="why">${esc(f.why)}</div></div></li>`).join("")}</ul>${d.finalFixes ? `<p class="muted">완성 단계 마지막 점검에서 ${esc(d.finalFixes)}군데를 더 고쳤어요.</p>` : ""}` : `<p class="muted">맞춤법 단계에서 고친 곳이 없어요.</p>`,
+    coach: () => coach.length ? coach.map((c,i) => `<h3>${i+1}번째 · ${fmtTime(c.at)}</h3>${c.self ? `<div class="praise">🔍 스스로 점검: ${gOf(d).crit.map(k => esc(k[1]) + " " + (["아직 없음","조금","충분"][c.checks?.[k[0]]] ?? "-")).join(" · ")}</div>` : `<div class="praise">🌱 ${esc(c.praise)}</div>`}${(c.questions||[]).map(q => `<div class="qcard"><span class="area">${esc(areaLabel(d, q.area))}</span><div class="q">${esc(q.q)}</div></div>`).join("")}`).join("") : `<p class="muted">아직 내용 다듬기 점검을 하지 않았어요.</p>`,
+  };
+  const setT = t => { $$("#dTabs .tab").forEach(b => b.classList.toggle("on", b.dataset.t === t)); body.innerHTML = tabs[t](); };
+  setT("final");
+  $$("#dTabs .tab").forEach(b => b.addEventListener("click", () => setT(b.dataset.t)));
+  const close = () => root.innerHTML = "";
+  root.querySelector(".modal-bg").addEventListener("click", e => { if (e.target.classList.contains("modal-bg")) close(); });
+  root.querySelector('[data-x="close"]').onclick = close;
+  root.querySelector('[data-x="dl"]').onclick = () => makePrint([d]);
+  root.querySelector('[data-x="del"]').onclick = () => {
+    $("#delWrap").innerHTML = `<span class="confirm-inline">정말 지울까요? 되돌릴 수 없어요. <button class="btn danger small" data-x="yes">지우기</button><button class="btn ghost small" data-x="no">아니요</button></span>`;
+    $('#delWrap [data-x="no"]').onclick = () => openDetail(id);
+    $('#delWrap [data-x="yes"]').onclick = async () => { try { await api("t_delete", { pin:tPin, id }, 20000); tSel.delete(id); tDocs = tDocs.filter(x => x.id !== id); renderTeacher(); close(); } catch { $("#delWrap").textContent = "지우지 못했어요."; } };
+  };
+}
+$("#btnPrint").addEventListener("click", () => makePrint(filtered().filter(d => tSel.has(d.id))));
+async function makePrint(list){
+  if (!list.length) return;
+  const inc = $("#tIncDraft").checked;
+  const pages = list.map(d => `<section class="pg">
+    <div class="meta">${esc(d.grade)}학년 ${esc(d.cls)}반 ${esc(d.num)}번 <b>${esc(d.name)}</b></div>
+    <div class="book">${esc(gOf(d).label)}${aboutLine(d) ? " · " + esc(aboutLine(d)) : ""}</div>
+    <h1>${esc(d.finalTitle || "(제목 없음)")}</h1>
+    <div class="txt">${esc(d.finalText || d.workText || d.draftRaw || "")}</div>
+    ${(d.stars || d.recommendTo) ? `<div class="rec">${d.stars ? "추천 별점 " + "★".repeat(d.stars) + "☆".repeat(5-d.stars) : ""}${d.recommendTo ? " · " + esc(d.recommendTo) + "에게 추천해요" : ""}</div>` : ""}
+    ${inc && d.draftRaw ? `<h2>처음 쓴 초고</h2><div class="txt draft">${esc(d.draftRaw)}</div>` : ""}
+  </section>`).join("");
+  const html = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>글 모음</title>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
+<style>@page{size:A4;margin:18mm 16mm}body{font-family:"Gowun Dodum",sans-serif;color:#222;margin:0;line-height:1.85;font-size:12.5pt}
+.pg{page-break-after:always;padding:6mm 2mm}.pg:last-child{page-break-after:auto}
+.meta{font-size:11pt;color:#555;border-bottom:2px solid #F28C6B;padding-bottom:4px}
+.book{margin-top:8px;color:#555}h1{font-family:"Jua",sans-serif;font-weight:400;font-size:22pt;margin:6px 0 12px}
+h2{font-family:"Jua",sans-serif;font-weight:400;font-size:13pt;margin:22px 0 6px;color:#777}
+.txt{white-space:pre-wrap;word-break:keep-all}.draft{font-size:11pt;color:#555;border:1px dashed #ccc;padding:8px 10px;border-radius:6px}
+.rec{margin-top:14px;padding-top:8px;border-top:1px dashed #ccc;font-size:11pt}
+.tip{font-size:10pt;color:#888;text-align:center;margin:10px}@media print{.tip{display:none}}</style></head>
+<body><p class="tip">Ctrl+P(맥은 ⌘+P)를 눌러 인쇄하세요. 한 장에 한 편씩 나와요.</p>${pages}</body></html>`;
+  const d = new Date(); const name = `글모음_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}_${list.length}편.html`;
+  const w = window.open("", "_blank");
+  if (!w) { tMsg("새 창이 막혔어요. 브라우저에서 팝업을 허용해 주세요."); return; }
+  w.document.open(); w.document.write(html.replace("</body>", `<script>window.onload=()=>setTimeout(()=>window.print(),600)<\/script></body>`)); w.document.close();
+  w.document.title = name.replace(/\.html$/,"");
+}
+
+/* ---------- init ---------- */
+$("#btnTLogout").addEventListener("click", () => { tPin = ""; try { sessionStorage.removeItem("writing-tpin"); } catch {} goHome(); });
+})();
+</script>
+</body>
+</html>
